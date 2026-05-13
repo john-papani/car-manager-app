@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import FuelEntryForm from "@/components/FuelEntryForm";
 
 export default function NewFuelEntryPage() {
@@ -15,7 +16,9 @@ export default function NewFuelEntryPage() {
         </p>
       </div>
 
-      <FuelEntryForm />
+      <Suspense fallback={null}>
+        <FuelEntryForm />
+      </Suspense>
     </main>
   );
 }

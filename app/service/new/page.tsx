@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ServiceEntryForm from "@/components/ServiceEntryForm";
 
 export default function NewServiceEntryPage() {
@@ -16,7 +17,9 @@ export default function NewServiceEntryPage() {
         </p>
       </div>
 
-      <ServiceEntryForm />
+      <Suspense fallback={null}>
+        <ServiceEntryForm />
+      </Suspense>
     </main>
   );
 }

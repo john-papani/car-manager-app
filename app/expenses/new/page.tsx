@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ExpenseEntryForm from "@/components/ExpenseEntryForm";
 
 export default function NewExpenseEntryPage() {
@@ -16,7 +17,9 @@ export default function NewExpenseEntryPage() {
         </p>
       </div>
 
-      <ExpenseEntryForm />
+      <Suspense fallback={null}>
+        <ExpenseEntryForm />
+      </Suspense>
     </main>
   );
 }
