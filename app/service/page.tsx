@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DeleteEntryButton from "@/components/DeleteEntryButton";
 import { getCachedRows } from "@/lib/sheets";
 import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
 
@@ -117,6 +118,14 @@ export default async function ServicePage() {
                 <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
                   {entry.total_cost.toFixed(2)}€
                 </span>
+              </div>
+
+              <div className="mt-3 flex justify-end">
+                <DeleteEntryButton
+                  entryId={entry.id}
+                  endpoint="/api/service"
+                  confirmMessage="Να διαγραφεί αυτή η εργασία service;"
+                />
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">

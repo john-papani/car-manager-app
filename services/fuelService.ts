@@ -29,3 +29,15 @@ export async function createFuelEntry(input: CreateFuelEntryInput) {
 
   return response.json();
 }
+
+export async function deleteFuelEntry(entryId: string) {
+  const response = await fetch(`/api/fuel?id=${encodeURIComponent(entryId)}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete fuel entry");
+  }
+
+  return response.json();
+}

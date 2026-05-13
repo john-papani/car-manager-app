@@ -29,3 +29,15 @@ export async function createExpenseEntry(input: CreateExpenseEntryInput) {
 
   return response.json();
 }
+
+export async function deleteExpenseEntry(entryId: string) {
+  const response = await fetch(`/api/expenses?id=${encodeURIComponent(entryId)}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete expense entry");
+  }
+
+  return response.json();
+}

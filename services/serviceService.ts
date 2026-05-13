@@ -29,3 +29,15 @@ export async function createServiceEntry(input: CreateServiceEntryInput) {
 
   return response.json();
 }
+
+export async function deleteServiceEntry(entryId: string) {
+  const response = await fetch(`/api/service?id=${encodeURIComponent(entryId)}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete service entry");
+  }
+
+  return response.json();
+}

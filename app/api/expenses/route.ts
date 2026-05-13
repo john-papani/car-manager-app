@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
-import { appendRow, getCachedRows, getSheetCacheTag } from "@/lib/sheets";
+import {
+  appendRow,
+  deleteRowById,
+  getCachedRows,
+  getSheetCacheTag,
+} from "@/lib/sheets";
 import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
 import type { CreateExpenseEntryInput, ExpenseEntry } from "@/types/car";
 
@@ -75,6 +80,37 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { message: "Failed to create expense entry" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const entryId = request.nextUrl.searchParams.get("id") ?? "";
+
+    if (!entryId) {
+      return NextResponse.json(
+        { message: "Missing entry id" },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await deleteRowById(SHEET_NAME, entryId);
+
+    if (!deleted) {
+      return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidatePath("/expenses");
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { message: "Failed to delete expense entry" },
       { status: 500 }
     );
   }

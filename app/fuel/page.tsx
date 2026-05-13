@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DeleteEntryButton from "@/components/DeleteEntryButton";
 import { getCachedRows } from "@/lib/sheets";
 import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
 import {
@@ -83,6 +84,14 @@ export default async function FuelPage() {
                   <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
                     {entry.price_per_liter.toFixed(3)}€/L
                   </span>
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  <DeleteEntryButton
+                    entryId={entry.id}
+                    endpoint="/api/fuel"
+                    confirmMessage="Να διαγραφεί αυτή η καταχώρηση καυσίμου;"
+                  />
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">

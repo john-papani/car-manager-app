@@ -27,7 +27,7 @@ export default async function DashboardPage() {
           Car Manager
         </p>
         <h1 className="relative mt-2 text-3xl font-semibold tracking-tight">
-          Honda Civic 1.6
+          Ford Puma 1.0 125cc
         </h1>
         <p className="relative mt-3 max-w-[18rem] text-sm leading-6 text-white/72">
           Όλα τα κόστη και τα γεμίσματα σε μια ήσυχη, καθαρή εικόνα.
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       <section className="mt-5 grid grid-cols-2 gap-3">
         <StatCard
           label="Συνολικό κόστος"
-          value={`${stats.totalCost.toFixed(2)} ‚ €`}
+          value={`${stats.totalCost.toFixed(2)} €`}
           tone="accent"
         />
         <StatCard

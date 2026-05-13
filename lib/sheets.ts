@@ -167,6 +167,73 @@ export async function appendRow(sheetName: string, values: unknown[]) {
   });
 }
 
+export async function deleteRowById(sheetName: string, rowId: string) {
+  if (!spreadsheetId) {
+    throw new Error("Missing GOOGLE_SHEET_ID");
+  }
+
+  if (!rowId) {
+    throw new Error("Missing row id");
+  }
+
+  await ensureSheetHeaders(sheetName);
+
+  const sheetsClient = getSheetsClient();
+  const spreadsheet = await sheetsClient.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets(properties(sheetId,title))",
+  });
+  const targetSheet = spreadsheet.data.sheets?.find(
+    (sheet) => sheet.properties?.title === sheetName
+  );
+  const sheetId = targetSheet?.properties?.sheetId;
+
+  if (sheetId === undefined) {
+    throw new Error(`Sheet ${sheetName} was not found`);
+  }
+
+  const response = await sheetsClient.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${sheetName}!A:Z`,
+  });
+  const values = response.data.values || [];
+  const schemaHeaders = SHEET_SCHEMAS[sheetName];
+  const dataStartIndex =
+    schemaHeaders && values[0] && hasHeaderRow(values[0], schemaHeaders) ? 1 : 0;
+
+  const rowIndex = values.findIndex((row, index) => {
+    if (index < dataStartIndex) {
+      return false;
+    }
+
+    return String(row[0] ?? "").trim() === rowId;
+  });
+
+  if (rowIndex === -1) {
+    return false;
+  }
+
+  await sheetsClient.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowIndex,
+              endIndex: rowIndex + 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  return true;
+}
+
 export async function getRows(sheetName: string) {
   if (!spreadsheetId) {
     throw new Error("Missing GOOGLE_SHEET_ID");
