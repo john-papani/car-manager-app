@@ -144,7 +144,7 @@ export default function ExpenseEntryForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-w-36 items-center justify-center rounded-full border border-[rgb(18_49_59_/_0.08)] bg-[rgb(255_251_246_/_0.92)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgb(18_49_59_/_0.08)] transition hover:border-[rgb(18_49_59_/_0.14)] hover:bg-white disabled:cursor-not-allowed disabled:opacity-55"
+          className="inline-flex min-w-36 items-center justify-center rounded-full border border-[rgb(18_49_59_/_0.14)] bg-[rgb(255_251_246_/_0.96)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_14px_30px_rgb(18_49_59_/_0.12),inset_0_1px_0_rgb(255_255_255_/_0.72)] transition hover:border-[rgb(18_49_59_/_0.2)] hover:bg-white hover:shadow-[0_18px_34px_rgb(18_49_59_/_0.14),inset_0_1px_0_rgb(255_255_255_/_0.8)] disabled:cursor-not-allowed disabled:opacity-55"
         >
           {isSubmitting ? "Αποθήκευση..." : "Αποθήκευση εξόδου"}
         </button>
