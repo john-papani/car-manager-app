@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Car Manager</title>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#102b34" />
+      <stop offset="0.6" stop-color="#214955" />
+      <stop offset="1" stop-color="#ca6f3d" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)" />
+  <path
+    d="M150 314c0-15 12-27 27-27h158c15 0 27 12 27 27v19c0 6-5 11-11 11h-13v19c0 16-13 29-29 29s-29-13-29-29v-19H232v19c0 16-13 29-29 29s-29-13-29-29v-19h-13c-6 0-11-5-11-11zm41-82c11-35 43-59 80-59s69 24 80 59l7 23H184zm32 17a18 18 0 1 0 0 .1zm131 0a18 18 0 1 0 0 .1z"
+    fill="#f8f4ee"
+  />
+  <path
+    d="M208 215h96c16 0 29 11 34 26l4 14H170l4-14c5-15 18-26 34-26z"
+    fill="#d8eef0"
+    opacity="0.95"
+  />
+</svg>

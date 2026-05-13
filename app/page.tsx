@@ -1,65 +1,108 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getCachedRows } from "@/lib/sheets";
+import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
+import { calculateFuelStats } from "@/lib/fuel-calculations";
+import StatCard from "@/components/StatCard";
 
-export default function Home() {
+export default async function DashboardPage() {
+  let rows: Record<string, string>[] = [];
+
+  try {
+    rows = await getCachedRows("fuel_entries");
+  } catch (error) {
+    console.error("Failed to load dashboard fuel entries", error);
+  }
+
+  const entries = rows.map(mapRowToFuelEntry).filter(isFuelEntryValid);
+  const stats = calculateFuelStats(entries);
+  const latestEntry = [...entries].sort((a, b) => b.odometer - a.odometer)[0];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
+      <section className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_52%,#ca6f3d_150%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.28)]">
+        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-16 left-8 h-36 w-36 rounded-full bg-[rgb(255_214_183_/_0.16)] blur-3xl" />
+
+        <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
+          Car Manager
+        </p>
+        <h1 className="relative mt-2 text-3xl font-semibold tracking-tight">
+          Honda Civic 1.6
+        </h1>
+        <p className="relative mt-3 max-w-[18rem] text-sm leading-6 text-white/72">
+          Όλα τα κόστη και τα γεμίσματα σε μια ήσυχη, καθαρή εικόνα.
+        </p>
+
+        <div className="relative mt-6 grid grid-cols-2 gap-3">
+          <Link
+            href="/fuel/new"
+            className="rounded-[1.35rem] bg-white px-4 py-3 text-center text-sm font-semibold !text-[var(--navy)] shadow-[0_12px_30px_rgb(255_255_255_/_0.18)]"
+          >
+            + Νέο γέμισμα
+          </Link>
+
+          <Link
+            href="/service"
+            className="rounded-[1.35rem] border border-white/14 bg-white/8 px-4 py-3 text-center text-sm font-semibold text-white backdrop-blur"
+          >
+            Service
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-5 grid grid-cols-2 gap-3">
+        <StatCard
+          label="Συνολικό κόστος"
+          value={`${stats.totalCost.toFixed(2)} ‚ €`}
+          tone="accent"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        <StatCard
+          label="Συνολικά λίτρα"
+          value={`${stats.totalLiters.toFixed(1)} L`}
+        />
+        <StatCard
+          label="Μέση τιμή"
+          value={`${stats.averagePricePerLiter.toFixed(3)}€/L`}
+        />
+        <StatCard
+          label="Τελευταία χλμ"
+          value={stats.latestOdometer.toLocaleString("el-GR")}
+        />
+      </section>
+
+      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Τελευταίο γέμισμα
+          </h2>
+          <Link
+            href="/fuel"
+            className="text-sm font-semibold text-[var(--accent-strong)]"
+          >
+            Όλα
+          </Link>
+        </div>
+
+        {latestEntry ? (
+          <div className="mt-4">
+            <p className="text-3xl font-semibold tracking-tight text-[var(--foreground)]">
+              {latestEntry.total_cost.toFixed(2)}€
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              {latestEntry.date} · {latestEntry.liters.toFixed(2)} L ·{" "}
+              {latestEntry.odometer.toLocaleString("el-GR")} km
+            </p>
+            <div className="mt-4 inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
+              {latestEntry.station || "Χωρίς πρατήριο"}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+            Δεν υπάρχει ακόμα καταχώρηση. Πρόσθεσε το πρώτο γέμισμα για να
+            αρχίσουν να φαίνονται τα στατιστικά.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        )}
+      </section>
+    </main>
   );
 }
