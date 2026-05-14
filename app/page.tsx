@@ -1,21 +1,59 @@
 import Link from "next/link";
 import { getCachedRows } from "@/lib/sheets";
 import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
-import { calculateFuelStats } from "@/lib/fuel-calculations";
+import {
+  calculateFuelStats,
+  getRecentConsumptionTrend,
+} from "@/lib/fuel-calculations";
+import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
+import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
 import StatCard from "@/components/StatCard";
+import ConsumptionBarChart from "@/components/ConsumptionBarChart";
+import CostDonutChart from "@/components/CostDonutChart";
 
 export default async function DashboardPage() {
-  let rows: Record<string, string>[] = [];
+  let fuelRows: Record<string, string>[] = [];
+  let expenseRows: Record<string, string>[] = [];
+  let serviceRows: Record<string, string>[] = [];
 
   try {
-    rows = await getCachedRows("fuel_entries");
+    fuelRows = await getCachedRows("fuel_entries");
   } catch (error) {
     console.error("Failed to load dashboard fuel entries", error);
   }
 
-  const entries = rows.map(mapRowToFuelEntry).filter(isFuelEntryValid);
-  const stats = calculateFuelStats(entries);
-  const latestEntry = [...entries].sort((a, b) => b.odometer - a.odometer)[0];
+  try {
+    expenseRows = await getCachedRows("expense_entries");
+  } catch (error) {
+    console.error("Failed to load dashboard expense entries", error);
+  }
+
+  try {
+    serviceRows = await getCachedRows("service_entries");
+  } catch (error) {
+    console.error("Failed to load dashboard service entries", error);
+  }
+
+  const fuelEntries = fuelRows.map(mapRowToFuelEntry).filter(isFuelEntryValid);
+  const expenseEntries = expenseRows
+    .map(mapRowToExpenseEntry)
+    .filter(isExpenseEntryValid);
+  const serviceEntries = serviceRows
+    .map(mapRowToServiceEntry)
+    .filter(isServiceEntryValid);
+
+  const stats = calculateFuelStats(fuelEntries);
+  const latestEntry = [...fuelEntries].sort((a, b) => b.odometer - a.odometer)[0];
+  const consumptionTrend = getRecentConsumptionTrend(fuelEntries);
+  const serviceTotal = serviceEntries.reduce(
+    (sum, entry) => sum + entry.total_cost,
+    0
+  );
+  const expensesTotal = expenseEntries.reduce(
+    (sum, entry) => sum + entry.total_cost,
+    0
+  );
+  const totalSpend = stats.totalCost + serviceTotal + expensesTotal;
 
   return (
     <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
@@ -56,18 +94,77 @@ export default async function DashboardPage() {
           value={`${stats.totalCost.toFixed(2)} €`}
           tone="accent"
         />
+        <StatCard label="Συνολικά λίτρα" value={`${stats.totalLiters.toFixed(1)} L`} />
         <StatCard
-          label="Συνολικά λίτρα"
-          value={`${stats.totalLiters.toFixed(1)} L`}
+          label="Μέση κατανάλωση"
+          value={
+            stats.consumptionSamples > 0
+              ? `${stats.averageConsumption.toFixed(2)} L/100km`
+              : "—"
+          }
         />
         <StatCard
-          label="Μέση τιμή"
+          label="Μέση τιμή / λίτρο"
           value={`${stats.averagePricePerLiter.toFixed(3)}€/L`}
         />
-        <StatCard
-          label="Τελευταία χλμ"
-          value={stats.latestOdometer.toLocaleString("el-GR")}
-        />
+      </section>
+
+      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">
+              Κατανάλωση
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Μέση τιμή από τα τελευταία γεμίσματα full tank.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              Μέσος όρος
+            </p>
+            <p className="mt-1 text-xl font-semibold text-[var(--foreground)]">
+              {stats.consumptionSamples > 0
+                ? `${stats.averageConsumption.toFixed(2)}`
+                : "—"}
+            </p>
+            <p className="text-xs text-[var(--muted)]">L/100km</p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <ConsumptionBarChart points={consumptionTrend} />
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">
+              Κατανομή κόστους
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Πού φεύγουν τα περισσότερα χρήματα συνολικά.
+            </p>
+          </div>
+          <Link
+            href="/expenses"
+            className="text-sm font-semibold text-[var(--accent-strong)]"
+          >
+            Έξοδα
+          </Link>
+        </div>
+
+        <div className="mt-4">
+          <CostDonutChart
+            total={totalSpend}
+            segments={[
+              { label: "Καύσιμα", value: stats.totalCost, color: "#ca6f3d" },
+              { label: "Service", value: serviceTotal, color: "#16313a" },
+              { label: "Λοιπά έξοδα", value: expensesTotal, color: "#d8a27a" },
+            ]}
+          />
+        </div>
       </section>
 
       <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
@@ -92,8 +189,20 @@ export default async function DashboardPage() {
               {latestEntry.date} · {latestEntry.liters.toFixed(2)} L ·{" "}
               {latestEntry.odometer.toLocaleString("el-GR")} km
             </p>
-            <div className="mt-4 inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-              {latestEntry.station || "Χωρίς πρατήριο"}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <div className="inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
+                {latestEntry.station || "Χωρίς πρατήριο"}
+              </div>
+              {latestEntry.receipt_url ? (
+                <a
+                  href={latestEntry.receipt_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex rounded-full border border-[var(--line)] bg-white px-3 py-1 text-xs font-semibold text-[var(--foreground)]"
+                >
+                  Απόδειξη
+                </a>
+              ) : null}
             </div>
           </div>
         ) : (

@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        { message: "Only image uploads are supported" },
+        { status: 400 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const driveClient = getDriveClient();

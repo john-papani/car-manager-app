@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createFuelEntry } from "@/services/fuelService";
+import { createFuelEntry, uploadFuelReceipt } from "@/services/fuelService";
 
 export default function FuelEntryForm() {
   const router = useRouter();
@@ -16,7 +16,8 @@ export default function FuelEntryForm() {
     is_full_tank: true,
     notes: "",
   });
-
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(name: string, value: string | boolean) {
@@ -26,11 +27,43 @@ export default function FuelEntryForm() {
     }));
   }
 
+  function handleReceiptChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextFile = event.target.files?.[0] ?? null;
+
+    setUploadError("");
+
+    if (!nextFile) {
+      setReceiptFile(null);
+      return;
+    }
+
+    if (!nextFile.type.startsWith("image/")) {
+      setReceiptFile(null);
+      setUploadError("Επίλεξε φωτογραφία απόδειξης.");
+      event.target.value = "";
+      return;
+    }
+
+    setReceiptFile(nextFile);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
+    setUploadError("");
 
     try {
+      let receiptUpload:
+        | {
+            file_id?: string;
+            url?: string;
+          }
+        | undefined;
+
+      if (receiptFile) {
+        receiptUpload = await uploadFuelReceipt(receiptFile);
+      }
+
       await createFuelEntry({
         date: form.date,
         odometer: Number(form.odometer),
@@ -39,6 +72,8 @@ export default function FuelEntryForm() {
         station: form.station,
         is_full_tank: form.is_full_tank,
         notes: form.notes,
+        receipt_file_id: receiptUpload?.file_id,
+        receipt_url: receiptUpload?.url,
       });
 
       router.push("/fuel");
@@ -151,6 +186,32 @@ export default function FuelEntryForm() {
             className="h-5 w-5 accent-[var(--accent)]"
           />
         </label>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+            Φωτογραφία απόδειξης
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleReceiptChange}
+            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-[var(--accent-soft)] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[var(--accent-strong)] focus:border-[var(--accent)]"
+          />
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Προαιρετικά, ανέβασε τη φωτογραφία της απόδειξης στο Google Drive.
+          </p>
+          {receiptFile ? (
+            <p className="mt-2 text-xs font-medium text-[var(--foreground)]">
+              Επιλεγμένο αρχείο: {receiptFile.name}
+            </p>
+          ) : null}
+          {uploadError ? (
+            <p className="mt-2 text-xs font-medium text-[var(--danger,#b42318)]">
+              {uploadError}
+            </p>
+          ) : null}
+        </div>
 
         <div>
           <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">

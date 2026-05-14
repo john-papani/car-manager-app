@@ -125,7 +125,19 @@ export default async function FuelPage() {
 
                 <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
                   <span>{entry.station || "Χωρίς πρατήριο"}</span>
-                  <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
+                  <div className="flex items-center gap-3">
+                    {entry.receipt_url ? (
+                      <a
+                        href={entry.receipt_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-[var(--accent-strong)] underline decoration-[color:var(--accent-strong)] underline-offset-2"
+                      >
+                        Απόδειξη
+                      </a>
+                    ) : null}
+                    <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
+                  </div>
                 </div>
               </article>
             );

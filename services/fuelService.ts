@@ -30,6 +30,25 @@ export async function createFuelEntry(input: CreateFuelEntryInput) {
   return response.json();
 }
 
+export async function uploadFuelReceipt(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/receipts", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload fuel receipt");
+  }
+
+  return (await response.json()) as {
+    file_id?: string;
+    url?: string;
+  };
+}
+
 export async function deleteFuelEntry(entryId: string) {
   const response = await fetch(`/api/fuel?id=${encodeURIComponent(entryId)}`, {
     method: "DELETE",
