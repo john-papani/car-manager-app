@@ -33,6 +33,7 @@ Store all recurring car costs in one place with a mobile-friendly interface and 
 - Tailwind CSS 4
 - Google Sheets API
 - Google Drive API
+- Auth.js (Google OAuth for personal Drive uploads)
 - UUID
 
 ## Project Structure
@@ -178,9 +179,24 @@ GOOGLE_DRIVE_RECEIPTS_FOLDER_ID="your_drive_folder_id"
 
 ### 4. Optional: create a Drive folder for receipts
 
-- Create a Google Drive folder
-- Share it with the same service account
-- Copy the folder ID into `GOOGLE_DRIVE_RECEIPTS_FOLDER_ID`
+- Create a folder in your personal Google Drive or Shared Drive
+- Copy that folder ID into `GOOGLE_DRIVE_RECEIPTS_FOLDER_ID`
+
+### 5. Configure Google OAuth for Auth.js
+
+- In Google Cloud, create OAuth credentials for a Web application
+- Add this redirect URI in development:
+  `http://localhost:3000/api/auth/callback/google`
+- Set these variables in `.env.local`:
+  `AUTH_GOOGLE_ID`
+  `AUTH_GOOGLE_SECRET`
+  `AUTH_SECRET`
+
+Important:
+
+- Google Sheets still use the service account
+- Receipt uploads use the Google account that is currently signed in to the app
+- The signed-in Google user must have access to the target Drive folder
 
 ## Local Development
 

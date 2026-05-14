@@ -80,7 +80,11 @@ export default function FuelEntryForm() {
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Κάτι πήγε λάθος στην αποθήκευση.");
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : "Κάτι πήγε λάθος στην αποθήκευση."
+      );
     } finally {
       setIsSubmitting(false);
     }

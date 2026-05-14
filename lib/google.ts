@@ -24,7 +24,7 @@ function getGoogleAuth() {
     key: privateKey,
     scopes: [
       "https://www.googleapis.com/auth/spreadsheets",
-      "https://www.googleapis.com/auth/drive.file",
+      "https://www.googleapis.com/auth/drive",
     ],
   });
 }
@@ -40,5 +40,17 @@ export function getDriveClient() {
   return google.drive({
     version: "v3",
     auth: getGoogleAuth(),
+  });
+}
+
+export function getUserDriveClient(accessToken: string) {
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials({
+    access_token: accessToken,
+  });
+
+  return google.drive({
+    version: "v3",
+    auth,
   });
 }

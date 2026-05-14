@@ -1,5 +1,14 @@
 import type { CreateFuelEntryInput, FuelEntry } from "@/types/car";
 
+async function getResponseMessage(response: Response, fallbackMessage: string) {
+  try {
+    const data = (await response.json()) as { message?: string };
+    return data.message || fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
+
 export async function getFuelEntries(): Promise<FuelEntry[]> {
   const response = await fetch("/api/fuel", {
     cache: "no-store",
@@ -24,7 +33,9 @@ export async function createFuelEntry(input: CreateFuelEntryInput) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create fuel entry");
+    throw new Error(
+      await getResponseMessage(response, "Failed to create fuel entry")
+    );
   }
 
   return response.json();
@@ -40,7 +51,9 @@ export async function uploadFuelReceipt(file: File) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload fuel receipt");
+    throw new Error(
+      await getResponseMessage(response, "Failed to upload fuel receipt")
+    );
   }
 
   return (await response.json()) as {

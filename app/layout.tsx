@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import AuthBanner from "@/components/AuthBanner";
 
 export const metadata: Metadata = {
   title: "Car Manager",
@@ -15,7 +17,7 @@ export const viewport: Viewport = {
   themeColor: "#12313b",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -23,6 +25,9 @@ export default function RootLayout({
   return (
     <html lang="el">
       <body className="text-[var(--foreground)] antialiased">
+        <Suspense fallback={null}>
+          <AuthBanner />
+        </Suspense>
         {children}
         <BottomNav />
       </body>

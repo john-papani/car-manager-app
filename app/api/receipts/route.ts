@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDriveClient } from "@/lib/google";
 import { Readable } from "stream";
+import { auth } from "@/auth";
+import { getUserDriveClient } from "@/lib/google";
 
 function bufferToStream(buffer: Buffer) {
   const readable = new Readable();
@@ -9,8 +10,35 @@ function bufferToStream(buffer: Buffer) {
   return readable;
 }
 
+function getReceiptFileName(file: File) {
+  const timestamp = new Date().toISOString().replaceAll(":", "-");
+  return `${timestamp}-${file.name}`;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.email || !session.accessToken) {
+      return NextResponse.json(
+        {
+          message:
+            "Συνδέσου με τον Google λογαριασμό σου για να ανεβάζεις αποδείξεις στο προσωπικό σου Drive.",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (session.error === "RefreshAccessTokenError") {
+      return NextResponse.json(
+        {
+          message:
+            "Η σύνδεση με Google έληξε. Κάνε αποσύνδεση και ξανά σύνδεση.",
+        },
+        { status: 401 }
+      );
+    }
+
     const folderId = process.env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID;
 
     if (!folderId) {
@@ -37,13 +65,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const driveClient = getUserDriveClient(session.accessToken);
+    const folderMetadata = await driveClient.files.get({
+      fileId: folderId,
+      fields: "id, name, mimeType, webViewLink",
+      supportsAllDrives: true,
+    });
+
+    if (folderMetadata.data.mimeType !== "application/vnd.google-apps.folder") {
+      return NextResponse.json(
+        {
+          message:
+            "Το GOOGLE_DRIVE_RECEIPTS_FOLDER_ID πρέπει να δείχνει σε φάκελο του Google Drive.",
+        },
+        { status: 400 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const driveClient = getDriveClient();
-
     const response = await driveClient.files.create({
       requestBody: {
-        name: `${Date.now()}-${file.name}`,
+        name: getReceiptFileName(file),
         parents: [folderId],
       },
       media: {
@@ -51,6 +94,7 @@ export async function POST(request: NextRequest) {
         body: bufferToStream(buffer),
       },
       fields: "id, webViewLink",
+      supportsAllDrives: true,
     });
 
     return NextResponse.json({
@@ -61,7 +105,10 @@ export async function POST(request: NextRequest) {
     console.error(error);
 
     return NextResponse.json(
-      { message: "Failed to upload receipt" },
+      {
+        message:
+          "Δεν έγινε upload στο Google Drive. Έλεγξε ότι ο logged-in λογαριασμός βλέπει τον φάκελο και ότι το GOOGLE_DRIVE_RECEIPTS_FOLDER_ID είναι σωστό.",
+      },
       { status: 500 }
     );
   }
