@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 
-export default async function AccountPage() {
+async function AccountContent() {
   const session = await auth();
 
   if (!session?.user) {
@@ -67,5 +68,13 @@ export default async function AccountPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense>
+      <AccountContent />
+    </Suspense>
   );
 }

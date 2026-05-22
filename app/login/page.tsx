@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/auth";
@@ -31,7 +32,15 @@ function GoogleIcon() {
   );
 }
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default function LoginPage({ searchParams }: LoginPageProps) {
+  return (
+    <Suspense>
+      <LoginContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function LoginContent({ searchParams }: LoginPageProps) {
   const session = await auth();
   const params = await searchParams;
 
