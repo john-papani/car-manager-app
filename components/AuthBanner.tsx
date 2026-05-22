@@ -1,9 +1,16 @@
-import { auth, signIn, signOut } from "@/auth";
+import { signIn, signOut } from "@/auth";
 
-export default async function AuthBanner() {
-  const session = await auth();
-  const userEmail = session?.user?.email;
-  const hasDriveAccess = Boolean(session?.accessToken) && !session?.error;
+type AuthBannerProps = {
+  hasDriveAccess: boolean;
+  hasSession: boolean;
+  userEmail: string | null;
+};
+
+export default async function AuthBanner({
+  hasDriveAccess,
+  hasSession,
+  userEmail,
+}: AuthBannerProps) {
 
   return (
     <div className="mx-auto mb-1 max-w-md px-4 pt-4">
@@ -22,7 +29,7 @@ export default async function AuthBanner() {
           </p>
         </div>
 
-        {session?.user ? (
+        {hasSession ? (
           <form
             action={async () => {
               "use server";

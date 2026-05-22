@@ -3,20 +3,124 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [
-  { href: "/", label: "Αρχική" },
-  { href: "/fuel", label: "Καύσιμα" },
-  { href: "/service", label: "Service" },
-  { href: "/expenses", label: "Έξοδα" },
+type BottomNavProps = {
+  userEmail?: string | null;
+  userName?: string | null;
+};
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+const items: NavItem[] = [
+  {
+    href: "/",
+    label: "Αρχική",
+    icon: (
+      <path
+        d="M3.75 8.25 12 2.25l8.25 6v9.75a.75.75 0 0 1-.75.75h-4.5v-5.25h-6v5.25h-4.5a.75.75 0 0 1-.75-.75Z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    ),
+  },
+  {
+    href: "/fuel",
+    label: "Καύσιμα",
+    icon: (
+      <>
+        <path
+          d="M8.25 4.5h6a1.5 1.5 0 0 1 1.5 1.5v12h-9V6a1.5 1.5 0 0 1 1.5-1.5Z"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M15.75 8.25h1.125a1.125 1.125 0 0 1 1.125 1.125V15a1.5 1.5 0 0 0 3 0V9.75l-1.5-1.5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path d="M9.75 8.25h3" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+      </>
+    ),
+  },
+  {
+    href: "/service",
+    label: "Service",
+    icon: (
+      <path
+        d="m14.25 5.25 4.5 4.5-9 9H5.25v-4.5l9-9Zm0 0 2.25-2.25a1.591 1.591 0 0 1 2.25 2.25L16.5 7.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    ),
+  },
+  {
+    href: "/expenses",
+    label: "Έξοδα",
+    icon: (
+      <>
+        <path
+          d="M4.5 6.75h15v10.5h-15z"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path d="M8.25 12h7.5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+        <circle cx="7" cy="10" r=".7" fill="currentColor" />
+        <circle cx="17" cy="14" r=".7" fill="currentColor" />
+      </>
+    ),
+  },
 ];
 
-export default function BottomNav() {
+function UserIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+      <path
+        d="M12 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm-6 7.5a6 6 0 0 1 12 0"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function NavIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+      {children}
+    </svg>
+  );
+}
+
+export default function BottomNav({ userEmail, userName }: BottomNavProps) {
   const pathname = usePathname();
 
+  if (pathname === "/login") {
+    return null;
+  }
+
+  const profileLabel = userName || userEmail || "Login";
+  const profileHref = userEmail ? "/account" : "/login";
+  const profileInitial = (userName || userEmail || "G").trim().charAt(0).toUpperCase();
+
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 px-3 pb-4 pt-3">
-      <div className="mx-auto max-w-md rounded-[2rem] border border-white/60 bg-[rgb(255_251_246_/_0.86)] p-2 shadow-[0_18px_60px_rgb(18_49_59_/_0.18)] backdrop-blur-xl">
-        <div className="grid grid-cols-4 gap-1">
+    <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 pt-2">
+      <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.6rem] border border-white/65 bg-[rgb(255_251_246_/_0.82)] px-2 py-2 shadow-[0_18px_40px_rgb(18_49_59_/_0.12)] backdrop-blur-xl">
+        <div className="grid min-w-0 flex-1 grid-cols-4 gap-1">
           {items.map((item) => {
             const isActive =
               item.href === "/"
@@ -27,17 +131,36 @@ export default function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-[1.2rem] px-2 py-3 text-center text-[11px] font-semibold transition ${
+                aria-label={item.label}
+                className={`rounded-[1.1rem] px-1.5 py-2 text-center transition ${
                   isActive
-                    ? "bg-[var(--navy)] !text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.08)]"
-                    : "text-[var(--muted)] hover:bg-white/80 hover:text-[var(--foreground)]"
+                    ? "bg-[rgb(18_49_59_/_0.08)] text-[var(--navy)]"
+                    : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
                 }`}
               >
-                {item.label}
+                <span className="flex flex-col items-center gap-1">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full">
+                    <NavIcon>{item.icon}</NavIcon>
+                  </span>
+                  <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+                </span>
               </Link>
             );
           })}
         </div>
+
+        <Link
+          href={profileHref}
+          aria-label={userEmail ? "Λογαριασμός" : "Σύνδεση"}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white/86 text-[var(--navy)] shadow-[0_8px_20px_rgb(18_49_59_/_0.08)] transition hover:bg-white"
+          title={profileLabel}
+        >
+          {userEmail ? (
+            <span className="text-xs font-semibold">{profileInitial}</span>
+          ) : (
+            <UserIcon />
+          )}
+        </Link>
       </div>
     </nav>
   );

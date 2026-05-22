@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 
 type GoogleTokenResponse = {
@@ -7,6 +8,9 @@ type GoogleTokenResponse = {
   expires_in: number;
   refresh_token?: string;
 };
+
+const DEMO_USERNAME = "user";
+const DEMO_PASSWORD = "user";
 
 async function refreshGoogleAccessToken(token: JWT): Promise<JWT> {
   try {
@@ -54,8 +58,33 @@ async function refreshGoogleAccessToken(token: JWT): Promise<JWT> {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 90, // 90 days
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 * 90, // 90 days
   },
   providers: [
+    Credentials({
+      name: "Demo Login",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const username = String(credentials?.username ?? "").trim();
+        const password = String(credentials?.password ?? "");
+
+        if (username !== DEMO_USERNAME || password !== DEMO_PASSWORD) {
+          return null;
+        }
+
+        return {
+          id: "demo-user",
+          name: "Demo User",
+          email: "user@local.demo",
+        };
+      },
+    }),
     Google({
       authorization: {
         params: {
