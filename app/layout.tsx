@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
-import { auth } from "@/auth";
+import AppBottomNav from "@/components/AppBottomNav";
 
 export const metadata: Metadata = {
   title: "Car Manager",
@@ -21,16 +21,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   return (
     <html lang="el">
       <body className="text-[var(--foreground)] antialiased">
         {children}
-        <BottomNav
-          userEmail={session?.user?.email ?? null}
-          userName={session?.user?.name ?? null}
-        />
+        <Suspense fallback={null}>
+          <AppBottomNav />
+        </Suspense>
       </body>
     </html>
   );
