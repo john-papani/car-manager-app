@@ -5,10 +5,15 @@ import {
   appendRow,
   deleteRowById,
   getCachedRows,
+  getRowById,
   getSheetCacheTag,
 } from "@/lib/sheets";
 import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
 import type { CreateFuelEntryInput, FuelEntry } from "@/types/car";
+
+import { createFuelCalendarEvent } from "@/lib/calendar";
+import { deleteCalendarEvent } from "@/lib/calendar";
+
 
 const SHEET_NAME = "fuel_entries";
 
@@ -78,9 +83,12 @@ export async function POST(request: NextRequest) {
       entry.created_at,
       entry.updated_at,
     ]);
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
-    revalidatePath("/");
-    revalidatePath("/fuel");
+
+    try {
+      await createFuelCalendarEvent(entry);
+    } catch (calendarError) {
+      console.error("Calendar event creation failed:", calendarError);
+    }
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
@@ -93,6 +101,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
 export async function DELETE(request: NextRequest) {
   try {
     const entryId = request.nextUrl.searchParams.get("id") ?? "";
@@ -104,10 +113,26 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const entry = await getRowById(SHEET_NAME, entryId);
+
+    if (!entry) {
+      return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
     const deleted = await deleteRowById(SHEET_NAME, entryId);
 
     if (!deleted) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    const calendarEventId = entry.calendar_event_id;
+
+    if (calendarEventId) {
+      try {
+        await deleteCalendarEvent(calendarEventId);
+      } catch (calendarError) {
+        console.error("Calendar event delete failed:", calendarError);
+      }
     }
 
     revalidateTag(getSheetCacheTag(SHEET_NAME), "max");

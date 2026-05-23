@@ -76,7 +76,7 @@ function isRowEmpty(row: unknown[]) {
 
 function hasHeaderRow(row: unknown[], headers: string[]) {
   return headers.every(
-    (header, index) => String(row[index] ?? "").trim() === header
+    (header, index) => String(row[index] ?? "").trim() === header,
   );
 }
 
@@ -103,7 +103,9 @@ async function ensureSheetHeaders(sheetName: string) {
   });
 
   const existingTitles =
-    spreadsheet.data.sheets?.map((sheet) => sheet.properties?.title).filter(Boolean) ?? [];
+    spreadsheet.data.sheets
+      ?.map((sheet) => sheet.properties?.title)
+      .filter(Boolean) ?? [];
 
   if (!existingTitles.includes(sheetName)) {
     await sheetsClient.spreadsheets.batchUpdate({
@@ -133,7 +135,7 @@ async function ensureSheetHeaders(sheetName: string) {
   });
   const firstRow = headerResponse.data.values?.[0] ?? [];
   const hasExpectedHeaders = headers.every(
-    (header, index) => String(firstRow[index] ?? "").trim() === header
+    (header, index) => String(firstRow[index] ?? "").trim() === header,
   );
 
   if (!hasExpectedHeaders) {
@@ -184,7 +186,7 @@ export async function deleteRowById(sheetName: string, rowId: string) {
     fields: "sheets(properties(sheetId,title))",
   });
   const targetSheet = spreadsheet.data.sheets?.find(
-    (sheet) => sheet.properties?.title === sheetName
+    (sheet) => sheet.properties?.title === sheetName,
   );
   const sheetId = targetSheet?.properties?.sheetId;
 
@@ -199,7 +201,9 @@ export async function deleteRowById(sheetName: string, rowId: string) {
   const values = response.data.values || [];
   const schemaHeaders = SHEET_SCHEMAS[sheetName];
   const dataStartIndex =
-    schemaHeaders && values[0] && hasHeaderRow(values[0], schemaHeaders) ? 1 : 0;
+    schemaHeaders && values[0] && hasHeaderRow(values[0], schemaHeaders)
+      ? 1
+      : 0;
 
   const rowIndex = values.findIndex((row, index) => {
     if (index < dataStartIndex) {
@@ -232,6 +236,16 @@ export async function deleteRowById(sheetName: string, rowId: string) {
   });
 
   return true;
+}
+export async function getRowById(
+  sheetName: string,
+  id: string,
+): Promise<Record<string, string> | null> {
+  const rows = await getRows(sheetName);
+
+  const row = rows.find((item) => item.id === id);
+
+  return row ?? null;
 }
 
 export async function getRows(sheetName: string) {

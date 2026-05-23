@@ -25,6 +25,7 @@ function getGoogleAuth() {
     scopes: [
       "https://www.googleapis.com/auth/spreadsheets",
       "https://www.googleapis.com/auth/drive",
+      "https://www.googleapis.com/auth/calendar",
     ],
   });
 }
@@ -38,6 +39,13 @@ export function getSheetsClient() {
 
 export function getDriveClient() {
   return google.drive({
+    version: "v3",
+    auth: getGoogleAuth(),
+  });
+}
+
+export function getCalendarClient() {
+  return google.calendar({
     version: "v3",
     auth: getGoogleAuth(),
   });
