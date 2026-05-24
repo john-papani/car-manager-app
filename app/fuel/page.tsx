@@ -71,17 +71,17 @@ export default async function FuelPage() {
             return (
               <article
                 key={entry.id}
-                className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"
+                className="animate-slide-up rounded-[2.2rem] border border-white/50 bg-white/70 p-5 shadow-[var(--surface-shadow)] backdrop-blur-md"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm text-[var(--muted)]">{entry.date}</p>
-                    <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">{entry.date}</p>
+                    <h2 className="mt-1 text-3xl font-black tracking-tight text-[var(--foreground)]">
                       {entry.total_cost.toFixed(2)}€
                     </h2>
                   </div>
 
-                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
+                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent-strong)] shadow-sm">
                     {entry.price_per_liter.toFixed(3)}€/L
                   </span>
                 </div>
@@ -94,18 +94,18 @@ export default async function FuelPage() {
                   />
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-[1.35rem] bg-white/70 p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  <div className="rounded-[1.2rem] bg-white/40 border border-white/60 p-3 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
                       Km
                     </p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
+                    <p className="mt-1 text-sm font-bold text-[var(--foreground)]">
                       {entry.odometer.toLocaleString("el-GR")}
                     </p>
                   </div>
 
-                  <div className="rounded-[1.35rem] bg-white/70 p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                  <div className="rounded-[1.2rem] bg-white/40 border border-white/60 p-3 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
                       Λίτρα
                     </p>
                     <p className="mt-1 font-semibold text-[var(--foreground)]">
@@ -113,8 +113,8 @@ export default async function FuelPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-[1.35rem] bg-white/70 p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                  <div className="rounded-[1.2rem] bg-[var(--accent-soft)]/40 border border-[var(--accent-soft)]/60 p-3 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-strong)]/70">
                       L/100km
                     </p>
                     <p className="mt-1 font-semibold text-[var(--foreground)]">

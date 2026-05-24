@@ -11,15 +11,15 @@ export default function StatCard({
 }: StatCardProps) {
   const toneClass =
     tone === "accent"
-      ? "bg-[linear-gradient(180deg,#16313a_0%,#244752_100%)] text-white shadow-[0_20px_50px_rgb(18_49_59_/_0.16)]"
-      : "bg-[var(--card)] text-[var(--foreground)] shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]";
+      ? "bg-[linear-gradient(160deg,#16313a_0%,#244752_100%)] text-white shadow-xl shadow-navy/10 border-white/10"
+      : "bg-[var(--card)] text-[var(--foreground)] shadow-[var(--surface-shadow)] backdrop-blur-md border-white/40";
 
   return (
     <div
-      className={`rounded-[1.75rem] border border-[var(--line)] p-4 ${toneClass}`}
+      className={`rounded-[2rem] border p-4.5 transition-transform active:scale-[0.98] shadow-[var(--inner-glow)] ${toneClass}`}
     >
       <p
-        className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${
+        className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
           tone === "accent" ? "text-white/62" : "text-[var(--muted)]"
         }`}
       >

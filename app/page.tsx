@@ -14,6 +14,7 @@ import {
 import StatCard from "@/components/StatCard";
 import ConsumptionBarChart from "@/components/ConsumptionBarChart";
 import CostDonutChart from "@/components/CostDonutChart";
+import ShareReportButton from "@/components/ShareReportButton";
 
 export default async function DashboardPage() {
   let fuelRows: Record<string, string>[] = [];
@@ -76,33 +77,63 @@ export default async function DashboardPage() {
         .join(" ")
     : "Ford Puma 1.0 125cc";
 
+  // Monthly Report Logic
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const isThisMonth = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  };
+
+  const mFuel = fuelEntries.filter((e) => isThisMonth(e.date));
+  const mExpenses = expenseEntries.filter((e) => isThisMonth(e.date));
+  const mService = serviceEntries.filter((e) => isThisMonth(e.date));
+
+  const reportData = {
+    vehicle: vehicleTitle,
+    month: now.toLocaleString("el-GR", { month: "long", year: "numeric" }),
+    fuel: {
+      cost: mFuel.reduce((s, e) => s + e.total_cost, 0),
+      liters: mFuel.reduce((s, e) => s + e.liters, 0),
+    },
+    expenses: mExpenses.reduce((s, e) => s + e.total_cost, 0),
+    service: mService.reduce((s, e) => s + e.total_cost, 0),
+  };
+
   return (
     <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
       <section className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_52%,#ca6f3d_150%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.28)]">
-        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-16 left-8 h-36 w-36 rounded-full bg-[rgb(255_214_183_/_0.16)] blur-3xl" />
+        <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-12 left-8 h-36 w-36 rounded-full bg-[rgb(255_214_183_/_0.12)] blur-3xl" />
 
-        <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
-          Car Manager
-        </p>
-        <h1 className="relative mt-2 text-3xl font-semibold tracking-tight">
-          {vehicleTitle}
-        </h1>
-        <p className="relative mt-3 max-w-[18rem] text-sm leading-6 text-white/72">
+        <div className="relative flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
+              Car Manager
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight leading-tight">
+              {vehicleTitle}
+            </h1>
+          </div>
+          <ShareReportButton data={reportData} />
+        </div>
+
+        <p className="relative mt-3 max-w-[18rem] text-sm font-medium leading-relaxed text-white/80">
           Όλα τα κόστη και τα γεμίσματα σε μια ήσυχη, καθαρή εικόνα.
         </p>
 
         <div className="relative mt-6 grid grid-cols-2 gap-3">
           <Link
             href="/fuel/new"
-            className="rounded-[1.35rem] bg-white px-4 py-3 text-center text-sm font-semibold !text-[var(--navy)] shadow-[0_12px_30px_rgb(255_255_255_/_0.18)]"
+            className="flex items-center justify-center rounded-2xl bg-white px-4 py-3.5 text-center text-sm font-bold !text-[var(--navy)] shadow-lg active:scale-95"
           >
             + Νέο γέμισμα
           </Link>
 
           <Link
             href="/service"
-            className="rounded-[1.35rem] border border-white/14 bg-white/8 px-4 py-3 text-center text-sm font-semibold text-white backdrop-blur"
+            className="flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-sm font-bold text-white backdrop-blur-md active:scale-95"
           >
             Service
           </Link>
@@ -130,7 +161,7 @@ export default async function DashboardPage() {
         />
       </section>
 
-      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
@@ -158,7 +189,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
@@ -188,7 +219,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[var(--foreground)]">
             Τελευταίο γέμισμα
@@ -206,7 +237,7 @@ export default async function DashboardPage() {
             <p className="text-3xl font-semibold tracking-tight text-[var(--foreground)]">
               {latestEntry.total_cost.toFixed(2)}€
             </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
               {latestEntry.date} · {latestEntry.liters.toFixed(2)} L ·{" "}
               {latestEntry.odometer.toLocaleString("el-GR")} km
             </p>
