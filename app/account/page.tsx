@@ -2,6 +2,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
+import { getCachedRows } from "@/lib/sheets";
+import {
+  isVehicleProfileValid,
+  mapRowToVehicleProfile,
+} from "@/lib/vehicle-profile";
+import VehicleProfileForm from "@/components/VehicleProfileForm";
 
 async function AccountContent() {
   const session = await auth();
@@ -11,6 +17,17 @@ async function AccountContent() {
   }
 
   const isGoogleAccount = Boolean(session.accessToken) && !session.error;
+  let profile = null;
+
+  try {
+    profile =
+      (await getCachedRows("vehicle_profile"))
+        .map(mapRowToVehicleProfile)
+        .filter(isVehicleProfileValid)
+        .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
+  } catch (error) {
+    console.error("Failed to load vehicle profile", error);
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-md px-4 py-6 pb-32">
@@ -28,6 +45,8 @@ async function AccountContent() {
           {session.user.email || "Signed in user"}
         </p>
       </section>
+
+      <VehicleProfileForm initialProfile={profile} />
 
       <section className="mt-5 rounded-[1.8rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
         <div className="flex items-start justify-between gap-3">

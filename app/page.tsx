@@ -7,6 +7,10 @@ import {
 } from "@/lib/fuel-calculations";
 import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
 import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
+import {
+  isVehicleProfileValid,
+  mapRowToVehicleProfile,
+} from "@/lib/vehicle-profile";
 import StatCard from "@/components/StatCard";
 import ConsumptionBarChart from "@/components/ConsumptionBarChart";
 import CostDonutChart from "@/components/CostDonutChart";
@@ -15,6 +19,7 @@ export default async function DashboardPage() {
   let fuelRows: Record<string, string>[] = [];
   let expenseRows: Record<string, string>[] = [];
   let serviceRows: Record<string, string>[] = [];
+  let vehicleRows: Record<string, string>[] = [];
 
   try {
     fuelRows = await getCachedRows("fuel_entries");
@@ -34,6 +39,12 @@ export default async function DashboardPage() {
     console.error("Failed to load dashboard service entries", error);
   }
 
+  try {
+    vehicleRows = await getCachedRows("vehicle_profile");
+  } catch (error) {
+    console.error("Failed to load dashboard vehicle profile", error);
+  }
+
   const fuelEntries = fuelRows.map(mapRowToFuelEntry).filter(isFuelEntryValid);
   const expenseEntries = expenseRows
     .map(mapRowToExpenseEntry)
@@ -41,6 +52,11 @@ export default async function DashboardPage() {
   const serviceEntries = serviceRows
     .map(mapRowToServiceEntry)
     .filter(isServiceEntryValid);
+  const vehicleProfile =
+    vehicleRows
+      .map(mapRowToVehicleProfile)
+      .filter(isVehicleProfileValid)
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
 
   const stats = calculateFuelStats(fuelEntries);
   const latestEntry = [...fuelEntries].sort((a, b) => b.odometer - a.odometer)[0];
@@ -54,6 +70,11 @@ export default async function DashboardPage() {
     0
   );
   const totalSpend = stats.totalCost + serviceTotal + expensesTotal;
+  const vehicleTitle = vehicleProfile
+    ? [vehicleProfile.make, vehicleProfile.model, vehicleProfile.trim]
+        .filter(Boolean)
+        .join(" ")
+    : "Ford Puma 1.0 125cc";
 
   return (
     <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
@@ -65,7 +86,7 @@ export default async function DashboardPage() {
           Car Manager
         </p>
         <h1 className="relative mt-2 text-3xl font-semibold tracking-tight">
-          Ford Puma 1.0 125cc
+          {vehicleTitle}
         </h1>
         <p className="relative mt-3 max-w-[18rem] text-sm leading-6 text-white/72">
           Όλα τα κόστη και τα γεμίσματα σε μια ήσυχη, καθαρή εικόνα.

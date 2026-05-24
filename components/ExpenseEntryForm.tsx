@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createExpenseEntry } from "@/services/expenseService";
+import FormActionBar from "@/components/FormActionBar";
 
 export default function ExpenseEntryForm() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function ExpenseEntryForm() {
     vendor: "",
     notes: "",
   });
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(name: string, value: string) {
@@ -27,6 +29,7 @@ export default function ExpenseEntryForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
+    setSubmitError("");
 
     try {
       await createExpenseEntry({
@@ -42,7 +45,7 @@ export default function ExpenseEntryForm() {
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Η αποθήκευση του εξόδου απέτυχε.");
+      setSubmitError("Η αποθήκευση του εξόδου δεν ολοκληρώθηκε.");
     } finally {
       setIsSubmitting(false);
     }
@@ -51,104 +54,124 @@ export default function ExpenseEntryForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"
+      className="rounded-[1.95rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow)]"
     >
-      <div className="space-y-4 pb-20">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-            Ημερομηνία
-          </label>
-          <input
-            type="date"
-            value={form.date}
-            onChange={(event) => updateField("date", event.target.value)}
-            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-            required
-          />
-        </div>
+      <div className="rounded-[1.6rem] border border-white/65 bg-white/50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+          Γενικά έξοδα
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          Κατέγραψε γρήγορα οποιοδήποτε έξοδο του οχήματος για να μένει πάντα
+          ξεκάθαρη η συνολική εικόνα του κόστους.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-              Κατηγορία
-            </label>
-            <input
-              type="text"
-              value={form.category}
-              onChange={(event) => updateField("category", event.target.value)}
-              placeholder="π.χ. Ασφάλεια"
-              className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-              required
-            />
+      <div className="mt-4 space-y-4">
+        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card-strong)] p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Ημερομηνία
+              </label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={(event) => updateField("date", event.target.value)}
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Κατηγορία
+              </label>
+              <input
+                type="text"
+                value={form.category}
+                onChange={(event) => updateField("category", event.target.value)}
+                placeholder="π.χ. Ασφάλεια"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Κόστος €
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                value={form.total_cost}
+                onChange={(event) => updateField("total_cost", event.target.value)}
+                placeholder="85.00"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                required
+              />
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-              Κόστος €
-            </label>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={form.total_cost}
-              onChange={(event) => updateField("total_cost", event.target.value)}
-              placeholder="85.00"
-              className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-              required
-            />
+        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card-strong)] p-4">
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Προμηθευτής / σημείο
+              </label>
+              <input
+                type="text"
+                value={form.vendor}
+                onChange={(event) => updateField("vendor", event.target.value)}
+                placeholder="π.χ. e-Pass, Δημοτικό Parking"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Χιλιόμετρα
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={form.odometer}
+                onChange={(event) => updateField("odometer", event.target.value)}
+                placeholder="προαιρετικό"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
+                Σημειώσεις
+              </label>
+              <textarea
+                value={form.notes}
+                onChange={(event) => updateField("notes", event.target.value)}
+                placeholder="π.χ. ετήσια ανανέωση ασφάλειας"
+                rows={3}
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+              />
+            </div>
           </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-            Προμηθευτής / σημείο
-          </label>
-          <input
-            type="text"
-            value={form.vendor}
-            onChange={(event) => updateField("vendor", event.target.value)}
-            placeholder="π.χ. e-Pass, Δημοτικό Parking"
-            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-            Χιλιόμετρα
-          </label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={form.odometer}
-            onChange={(event) => updateField("odometer", event.target.value)}
-            placeholder="προαιρετικό"
-            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
-            Σημειώσεις
-          </label>
-          <textarea
-            value={form.notes}
-            onChange={(event) => updateField("notes", event.target.value)}
-            placeholder="π.χ. ετήσια ανανέωση ασφάλειας"
-            rows={3}
-            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--card-strong)] px-4 py-3 text-base outline-none transition focus:border-[var(--accent)]"
-          />
         </div>
       </div>
 
-      <div className="sticky bottom-20 mt-6 flex justify-end bg-[linear-gradient(180deg,rgba(246,240,230,0)_0%,rgba(246,240,230,0.92)_38%,rgba(246,240,230,1)_100%)] px-1 pb-1 pt-4">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex min-w-36 items-center justify-center rounded-full border border-[rgb(18_49_59_/_0.14)] bg-[rgb(255_251_246_/_0.96)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_14px_30px_rgb(18_49_59_/_0.12),inset_0_1px_0_rgb(255_255_255_/_0.72)] transition hover:border-[rgb(18_49_59_/_0.2)] hover:bg-white hover:shadow-[0_18px_34px_rgb(18_49_59_/_0.14),inset_0_1px_0_rgb(255_255_255_/_0.8)] disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          {isSubmitting ? "Αποθήκευση..." : "Αποθήκευση εξόδου"}
-        </button>
-      </div>
+      {submitError ? (
+        <p className="mt-4 text-sm font-medium text-[var(--danger,#b42318)]">
+          {submitError}
+        </p>
+      ) : null}
+
+      <FormActionBar
+        disabled={isSubmitting}
+        isSubmitting={isSubmitting}
+        idleLabel="Αποθήκευση εξόδου"
+        submittingLabel="Αποθήκευση..."
+        hint="Συμπλήρωσε καθαρή κατηγορία και ποσό για να μένει χρήσιμο το οικονομικό ιστορικό."
+      />
     </form>
   );
 }

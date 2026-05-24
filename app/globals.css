@@ -11,7 +11,9 @@
   --accent: #ca6f3d;
   --accent-strong: #ad5425;
   --accent-soft: #f2d4bf;
+  --accent-soft-strong: #f6e2d4;
   --navy: #12313b;
+  --surface-shadow: 0 18px 40px rgb(18 49 59 / 0.06);
 }
 
 @theme inline {
@@ -54,4 +56,29 @@ input,
 textarea,
 button {
   font: inherit;
+}
+
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, white);
+}
+
+input:focus,
+textarea:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  box-shadow: 0 0 0 4px rgb(202 111 61 / 0.16);
 }

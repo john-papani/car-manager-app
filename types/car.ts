@@ -69,3 +69,30 @@ export type CreateExpenseEntryInput = {
   vendor?: string;
   notes?: string;
 };
+
+export type VehicleProfile = {
+  id: string;
+  make: string;
+  model: string;
+  trim?: string;
+  year?: number;
+  license_plate?: string;
+  fuel_type?: string;
+  transmission?: string;
+  engine?: string;
+  color?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UpdateVehicleProfileInput = {
+  make: string;
+  model: string;
+  trim?: string;
+  year?: number;
+  license_plate?: string;
+  fuel_type?: string;
+  transmission?: string;
+  engine?: string;
+  color?: string;
+};

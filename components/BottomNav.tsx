@@ -109,7 +109,7 @@ function NavIcon({ children }: { children: React.ReactNode }) {
 export default function BottomNav({ userEmail, userName }: BottomNavProps) {
   const pathname = usePathname();
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname.endsWith("/new")) {
     return null;
   }
 
@@ -118,8 +118,8 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
   const profileInitial = (userName || userEmail || "G").trim().charAt(0).toUpperCase();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 pt-2">
-      <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.6rem] border border-white/65 bg-[rgb(255_251_246_/_0.82)] px-2 py-2 shadow-[0_18px_40px_rgb(18_49_59_/_0.12)] backdrop-blur-xl">
+    <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.9rem)] pt-2">
+      <div className="mx-auto flex max-w-md items-center gap-2 rounded-[1.7rem] border border-white/70 bg-[rgb(255_251_246_/_0.84)] px-2 py-2 shadow-[0_18px_40px_rgb(18_49_59_/_0.12)] backdrop-blur-xl">
         <div className="grid min-w-0 flex-1 grid-cols-4 gap-1">
           {items.map((item) => {
             const isActive =

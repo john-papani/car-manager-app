@@ -41,6 +41,20 @@ const SHEET_SCHEMAS: Record<string, string[]> = {
     "created_at",
     "updated_at",
   ],
+  vehicle_profile: [
+    "id",
+    "make",
+    "model",
+    "trim",
+    "year",
+    "license_plate",
+    "fuel_type",
+    "transmission",
+    "engine",
+    "color",
+    "created_at",
+    "updated_at",
+  ],
 };
 
 export function getSheetCacheTag(sheetName: string) {
@@ -167,6 +181,60 @@ export async function appendRow(sheetName: string, values: unknown[]) {
       values: [values],
     },
   });
+}
+
+export async function upsertRowById(
+  sheetName: string,
+  rowId: string,
+  values: unknown[],
+) {
+  if (!spreadsheetId) {
+    throw new Error("Missing GOOGLE_SHEET_ID");
+  }
+
+  if (!rowId) {
+    throw new Error("Missing row id");
+  }
+
+  await ensureSheetHeaders(sheetName);
+
+  const sheetsClient = getSheetsClient();
+  const response = await sheetsClient.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${sheetName}!A:Z`,
+  });
+  const existingRows = response.data.values || [];
+  const schemaHeaders = SHEET_SCHEMAS[sheetName];
+  const dataStartIndex =
+    schemaHeaders && existingRows[0] && hasHeaderRow(existingRows[0], schemaHeaders)
+      ? 1
+      : 0;
+
+  const rowIndex = existingRows.findIndex((row, index) => {
+    if (index < dataStartIndex) {
+      return false;
+    }
+
+    return String(row[0] ?? "").trim() === rowId;
+  });
+
+  if (rowIndex === -1) {
+    await appendRow(sheetName, values);
+    return "inserted";
+  }
+
+  const targetRange = `${sheetName}!A${rowIndex + 1}:${getColumnName(values.length)}${rowIndex + 1}`;
+
+  await sheetsClient.spreadsheets.values.update({
+    spreadsheetId,
+    range: targetRange,
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [values],
+    },
+  });
+
+  return "updated";
 }
 
 export async function deleteRowById(sheetName: string, rowId: string) {
