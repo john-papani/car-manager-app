@@ -1,17 +1,82 @@
 "use client";
 
-type ReportData = {
-  vehicle: string;
-  month: string;
-  fuel: { cost: number; liters: number };
-  expenses: number;
-  service: number;
+type FuelReportEntry = {
+  date: string;
+  liters: number;
+  total_cost: number;
 };
 
-export default function ShareReportButton({ data }: { data: ReportData }) {
-  const total = data.fuel.cost + data.expenses + data.service;
+type CostReportEntry = {
+  date: string;
+  total_cost: number;
+};
+
+type ShareReportButtonProps = {
+  vehicle: string;
+  fuelEntries: FuelReportEntry[];
+  expenseEntries: CostReportEntry[];
+  serviceEntries: CostReportEntry[];
+};
+
+
+export default function ShareReportButton({
+  vehicle,
+  fuelEntries,
+  expenseEntries,
+  serviceEntries,
+}: ShareReportButtonProps) {
+  const isThisMonth = (dateStr: string, now: Date) => {
+    const date = new Date(dateStr);
+
+    return (
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
+  };
 
   const handleExportPdf = () => {
+    const now = new Date();
+
+    const monthlyFuelEntries = fuelEntries.filter((entry) =>
+      isThisMonth(entry.date, now),
+    );
+
+    const monthlyExpenseEntries = expenseEntries.filter((entry) =>
+      isThisMonth(entry.date, now),
+    );
+
+    const monthlyServiceEntries = serviceEntries.filter((entry) =>
+      isThisMonth(entry.date, now),
+    );
+
+    const data = {
+      vehicle,
+      month: now.toLocaleString("el-GR", {
+        month: "long",
+        year: "numeric",
+      }),
+      fuel: {
+        cost: monthlyFuelEntries.reduce(
+          (sum, entry) => sum + entry.total_cost,
+          0,
+        ),
+        liters: monthlyFuelEntries.reduce(
+          (sum, entry) => sum + entry.liters,
+          0,
+        ),
+      },
+      expenses: monthlyExpenseEntries.reduce(
+        (sum, entry) => sum + entry.total_cost,
+        0,
+      ),
+      service: monthlyServiceEntries.reduce(
+        (sum, entry) => sum + entry.total_cost,
+        0,
+      ),
+    };
+
+    const total = data.fuel.cost + data.expenses + data.service;
+
     const reportWindow = window.open("", "_blank", "width=900,height=700");
 
     if (!reportWindow) {

@@ -77,30 +77,6 @@ export default async function DashboardPage() {
         .join(" ")
     : "Ford Puma 1.0 125cc";
 
-  // Monthly Report Logic
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  const isThisMonth = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  };
-
-  const mFuel = fuelEntries.filter((e) => isThisMonth(e.date));
-  const mExpenses = expenseEntries.filter((e) => isThisMonth(e.date));
-  const mService = serviceEntries.filter((e) => isThisMonth(e.date));
-
-  const reportData = {
-    vehicle: vehicleTitle,
-    month: now.toLocaleString("el-GR", { month: "long", year: "numeric" }),
-    fuel: {
-      cost: mFuel.reduce((s, e) => s + e.total_cost, 0),
-      liters: mFuel.reduce((s, e) => s + e.liters, 0),
-    },
-    expenses: mExpenses.reduce((s, e) => s + e.total_cost, 0),
-    service: mService.reduce((s, e) => s + e.total_cost, 0),
-  };
-
   return (
     <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
       <section className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_52%,#ca6f3d_150%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.28)]">
@@ -116,7 +92,22 @@ export default async function DashboardPage() {
               {vehicleTitle}
             </h1>
           </div>
-          <ShareReportButton data={reportData} />
+          <ShareReportButton
+            vehicle={vehicleTitle}
+            fuelEntries={fuelEntries.map((entry) => ({
+              date: entry.date,
+              liters: entry.liters,
+              total_cost: entry.total_cost,
+            }))}
+            expenseEntries={expenseEntries.map((entry) => ({
+              date: entry.date,
+              total_cost: entry.total_cost,
+            }))}
+            serviceEntries={serviceEntries.map((entry) => ({
+              date: entry.date,
+              total_cost: entry.total_cost,
+            }))}
+          />
         </div>
 
         <p className="relative mt-3 max-w-[18rem] text-sm font-medium leading-relaxed text-white/80">
