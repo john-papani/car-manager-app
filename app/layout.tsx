@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import "./globals.css";
 import AppBottomNav from "@/components/AppBottomNav";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Car Manager",
@@ -24,10 +25,15 @@ export default async function RootLayout({
   return (
     <html lang="el">
       <body className="text-[var(--foreground)] antialiased">
-        {children}
-        <Suspense fallback={null}>
-          <AppBottomNav />
-        </Suspense>
+        <AppShell
+          bottomNav={
+            <Suspense fallback={null}>
+              <AppBottomNav />
+            </Suspense>
+          }
+        >
+          {children}
+        </AppShell>
       </body>
     </html>
   );
