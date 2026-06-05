@@ -1,24 +1,25 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
-import { getCachedRows } from "@/lib/sheets";
-import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
+import { getCurrentExpenseEntries } from "@/lib/current-user-data";
+import type { ExpenseEntry } from "@/types/car";
 
 export default async function ExpensesPage() {
-  let rows: Record<string, string>[] = [];
+  const session = await auth();
+  let entries: ExpenseEntry[] = [];
 
   try {
-    rows = await getCachedRows("expense_entries");
+    entries = await getCurrentExpenseEntries(session);
   } catch (error) {
     console.error("Failed to load expense history", error);
   }
 
-  const entries = rows
-    .map(mapRowToExpenseEntry)
-    .filter(isExpenseEntryValid)
-    .sort((a, b) => {
-      const dateCompare = b.date.localeCompare(a.date);
-      return dateCompare !== 0 ? dateCompare : b.created_at.localeCompare(a.created_at);
-    });
+  entries = entries.sort((a, b) => {
+    const dateCompare = b.date.localeCompare(a.date);
+    return dateCompare !== 0
+      ? dateCompare
+      : b.created_at.localeCompare(a.created_at);
+  });
 
   const totalCost = entries.reduce((sum, entry) => sum + entry.total_cost, 0);
   const categories = new Set(entries.map((entry) => entry.category)).size;

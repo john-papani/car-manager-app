@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 import { auth } from "@/auth";
+import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 import { getUserDriveClient } from "@/lib/google";
 
 function bufferToStream(buffer: Buffer) {
@@ -18,6 +19,15 @@ function getReceiptFileName(file: File) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        {
+          message: getDemoReadOnlyMessage("upload receipt images"),
+        },
+        { status: 403 },
+      );
+    }
 
     if (!session?.user?.email || !session.accessToken) {
       return NextResponse.json(

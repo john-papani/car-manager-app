@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
+import { getCurrentFuelEntries } from "@/lib/current-user-data";
+import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 import {
   appendRow,
   deleteRowById,
-  getCachedRows,
   getRowById,
   getSheetCacheTag,
 } from "@/lib/sheets";
-import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
 import type { CreateFuelEntryInput, FuelEntry } from "@/types/car";
 
 import { createFuelCalendarEvent } from "@/lib/calendar";
@@ -19,12 +20,9 @@ const SHEET_NAME = "fuel_entries";
 
 export async function GET() {
   try {
-    const rows = await getCachedRows(SHEET_NAME);
-
-    const entries = rows
-      .map(mapRowToFuelEntry)
-      .filter(isFuelEntryValid)
-      .sort((a, b) => b.odometer - a.odometer);
+    const entries = (await getCurrentFuelEntries()).sort(
+      (a, b) => b.odometer - a.odometer,
+    );
 
     return NextResponse.json({ entries });
   } catch (error) {
@@ -39,6 +37,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("add fuel entries") },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreateFuelEntryInput;
 
     if (!body.date || !body.odometer || !body.liters || !body.total_cost) {
@@ -104,6 +111,15 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("delete fuel entries") },
+        { status: 403 },
+      );
+    }
+
     const entryId = request.nextUrl.searchParams.get("id") ?? "";
 
     if (!entryId) {

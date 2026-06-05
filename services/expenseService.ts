@@ -1,5 +1,14 @@
 import type { CreateExpenseEntryInput, ExpenseEntry } from "@/types/car";
 
+async function getResponseMessage(response: Response, fallbackMessage: string) {
+  try {
+    const data = (await response.json()) as { message?: string };
+    return data.message || fallbackMessage;
+  } catch {
+    return fallbackMessage;
+  }
+}
+
 export async function getExpenseEntries(): Promise<ExpenseEntry[]> {
   const response = await fetch("/api/expenses", {
     cache: "no-store",
@@ -24,7 +33,9 @@ export async function createExpenseEntry(input: CreateExpenseEntryInput) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create expense entry");
+    throw new Error(
+      await getResponseMessage(response, "Failed to create expense entry"),
+    );
   }
 
   return response.json();
@@ -36,7 +47,9 @@ export async function deleteExpenseEntry(entryId: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to delete expense entry");
+    throw new Error(
+      await getResponseMessage(response, "Failed to delete expense entry"),
+    );
   }
 
   return response.json();

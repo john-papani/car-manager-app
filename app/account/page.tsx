@@ -2,11 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
-import { getCachedRows } from "@/lib/sheets";
-import {
-  isVehicleProfileValid,
-  mapRowToVehicleProfile,
-} from "@/lib/vehicle-profile";
+import { getCurrentVehicleProfile } from "@/lib/current-user-data";
+import { isDemoSession } from "@/lib/demo-mode";
 import VehicleProfileForm from "@/components/VehicleProfileForm";
 
 async function AccountContent() {
@@ -17,14 +14,11 @@ async function AccountContent() {
   }
 
   const isGoogleAccount = Boolean(session.accessToken) && !session.error;
+  const isDemoAccount = isDemoSession(session);
   let profile = null;
 
   try {
-    profile =
-      (await getCachedRows("vehicle_profile"))
-        .map(mapRowToVehicleProfile)
-        .filter(isVehicleProfileValid)
-        .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
+    profile = await getCurrentVehicleProfile(session);
   } catch (error) {
     console.error("Failed to load vehicle profile", error);
   }
@@ -57,6 +51,11 @@ async function AccountContent() {
                 ? "Connected with Google and ready for Drive sync."
                 : "Signed in with local demo account."}
             </p>
+            {isDemoAccount ? (
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                Demo mode loads realistic mock vehicle history and keeps editing disabled.
+              </p>
+            ) : null}
           </div>
           <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
             {isGoogleAccount ? "Google" : "Demo"}

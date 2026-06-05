@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
+import { getCurrentExpenseEntries } from "@/lib/current-user-data";
+import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 import {
   appendRow,
   deleteRowById,
-  getCachedRows,
   getSheetCacheTag,
 } from "@/lib/sheets";
-import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
 import type { CreateExpenseEntryInput, ExpenseEntry } from "@/types/car";
 
 const SHEET_NAME = "expense_entries";
 
 export async function GET() {
   try {
-    const rows = await getCachedRows(SHEET_NAME);
-
-    const entries = rows
-      .map(mapRowToExpenseEntry)
-      .filter(isExpenseEntryValid)
+    const entries = (await getCurrentExpenseEntries())
       .sort((a, b) => {
         const dateCompare = b.date.localeCompare(a.date);
-        return dateCompare !== 0 ? dateCompare : b.created_at.localeCompare(a.created_at);
+        return dateCompare !== 0
+          ? dateCompare
+          : b.created_at.localeCompare(a.created_at);
       });
 
     return NextResponse.json({ entries });
@@ -37,6 +36,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("add expense entries") },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreateExpenseEntryInput;
 
     if (!body.date || !body.category || body.total_cost === undefined) {
@@ -87,6 +95,15 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("delete expense entries") },
+        { status: 403 },
+      );
+    }
+
     const entryId = request.nextUrl.searchParams.get("id") ?? "";
 
     if (!entryId) {

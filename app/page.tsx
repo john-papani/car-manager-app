@@ -1,63 +1,56 @@
 import Link from "next/link";
-import { getCachedRows } from "@/lib/sheets";
-import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
+import { auth } from "@/auth";
+import {
+  getCurrentExpenseEntries,
+  getCurrentFuelEntries,
+  getCurrentServiceEntries,
+  getCurrentVehicleProfile,
+} from "@/lib/current-user-data";
 import {
   calculateFuelStats,
   getRecentConsumptionTrend,
 } from "@/lib/fuel-calculations";
-import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
-import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
-import {
-  isVehicleProfileValid,
-  mapRowToVehicleProfile,
-} from "@/lib/vehicle-profile";
 import StatCard from "@/components/StatCard";
 import ConsumptionBarChart from "@/components/ConsumptionBarChart";
 import CostDonutChart from "@/components/CostDonutChart";
 import ShareReportButton from "@/components/ShareReportButton";
+import type {
+  ExpenseEntry,
+  FuelEntry,
+  ServiceEntry,
+  VehicleProfile,
+} from "@/types/car";
 
 export default async function DashboardPage() {
-  let fuelRows: Record<string, string>[] = [];
-  let expenseRows: Record<string, string>[] = [];
-  let serviceRows: Record<string, string>[] = [];
-  let vehicleRows: Record<string, string>[] = [];
+  const session = await auth();
+  let fuelEntries: FuelEntry[] = [];
+  let expenseEntries: ExpenseEntry[] = [];
+  let serviceEntries: ServiceEntry[] = [];
+  let vehicleProfile: VehicleProfile | null = null;
 
   try {
-    fuelRows = await getCachedRows("fuel_entries");
+    fuelEntries = await getCurrentFuelEntries(session);
   } catch (error) {
     console.error("Failed to load dashboard fuel entries", error);
   }
 
   try {
-    expenseRows = await getCachedRows("expense_entries");
+    expenseEntries = await getCurrentExpenseEntries(session);
   } catch (error) {
     console.error("Failed to load dashboard expense entries", error);
   }
 
   try {
-    serviceRows = await getCachedRows("service_entries");
+    serviceEntries = await getCurrentServiceEntries(session);
   } catch (error) {
     console.error("Failed to load dashboard service entries", error);
   }
 
   try {
-    vehicleRows = await getCachedRows("vehicle_profile");
+    vehicleProfile = await getCurrentVehicleProfile(session);
   } catch (error) {
     console.error("Failed to load dashboard vehicle profile", error);
   }
-
-  const fuelEntries = fuelRows.map(mapRowToFuelEntry).filter(isFuelEntryValid);
-  const expenseEntries = expenseRows
-    .map(mapRowToExpenseEntry)
-    .filter(isExpenseEntryValid);
-  const serviceEntries = serviceRows
-    .map(mapRowToServiceEntry)
-    .filter(isServiceEntryValid);
-  const vehicleProfile =
-    vehicleRows
-      .map(mapRowToVehicleProfile)
-      .filter(isVehicleProfileValid)
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
 
   const stats = calculateFuelStats(fuelEntries);
   const latestEntry = [...fuelEntries].sort((a, b) => b.odometer - a.odometer)[0];

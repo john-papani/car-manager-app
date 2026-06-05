@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/auth";
+import AuthSubmitButton from "@/components/AuthSubmitButton";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -137,12 +138,12 @@ async function LoginContent({ searchParams }: LoginPageProps) {
               />
             </div>
 
-            <button
-              type="submit"
+            <AuthSubmitButton
+              pendingLabel="Signing in..."
               className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgb(18_49_59_/_0.06)] transition hover:bg-[rgb(255_251_246_/_0.95)]"
             >
               Sign in with username
-            </button>
+            </AuthSubmitButton>
           </form>
         </div>
 
@@ -168,13 +169,13 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             }}
             className="mt-5"
           >
-            <button
-              type="submit"
+            <AuthSubmitButton
+              pendingLabel="Redirecting..."
               className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[var(--navy)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgb(18_49_59_/_0.16)] transition hover:bg-[rgb(18_49_59_/_0.94)]"
             >
               <GoogleIcon />
               Continue with Google
-            </button>
+            </AuthSubmitButton>
           </form>
         </div>
       </section>

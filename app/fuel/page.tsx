@@ -1,25 +1,24 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
-import { getCachedRows } from "@/lib/sheets";
-import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
+import { getCurrentFuelEntries } from "@/lib/current-user-data";
 import {
   calculateConsumption,
   calculateCostPerKm,
 } from "@/lib/fuel-calculations";
+import type { FuelEntry } from "@/types/car";
 
 export default async function FuelPage() {
-  let rows: Record<string, string>[] = [];
+  const session = await auth();
+  let entries: FuelEntry[] = [];
 
   try {
-    rows = await getCachedRows("fuel_entries");
+    entries = await getCurrentFuelEntries(session);
   } catch (error) {
     console.error("Failed to load fuel history", error);
   }
 
-  const entries = rows
-    .map(mapRowToFuelEntry)
-    .filter(isFuelEntryValid)
-    .sort((a, b) => b.odometer - a.odometer);
+  entries = entries.sort((a, b) => b.odometer - a.odometer);
 
   const chronologicalEntries = [...entries].sort(
     (a, b) => a.odometer - b.odometer

@@ -1,21 +1,20 @@
 import Link from "next/link";
+import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
-import { getCachedRows } from "@/lib/sheets";
-import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
+import { getCurrentServiceEntries } from "@/lib/current-user-data";
+import type { ServiceEntry } from "@/types/car";
 
 export default async function ServicePage() {
-  let rows: Record<string, string>[] = [];
+  const session = await auth();
+  let entries: ServiceEntry[] = [];
 
   try {
-    rows = await getCachedRows("service_entries");
+    entries = await getCurrentServiceEntries(session);
   } catch (error) {
     console.error("Failed to load service history", error);
   }
 
-  const entries = rows
-    .map(mapRowToServiceEntry)
-    .filter(isServiceEntryValid)
-    .sort((a, b) => b.odometer - a.odometer);
+  entries = entries.sort((a, b) => b.odometer - a.odometer);
 
   const totalCost = entries.reduce((sum, entry) => sum + entry.total_cost, 0);
   const latestEntry = entries[0];

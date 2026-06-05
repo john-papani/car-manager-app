@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { isDemoSession } from "@/lib/demo-mode";
 import { getUserDriveClient } from "@/lib/google";
 
 function getErrorMessage(error: unknown) {
@@ -39,6 +40,23 @@ export async function GET() {
         message: "Missing GOOGLE_DRIVE_RECEIPTS_FOLDER_ID",
       },
       { status: 500 }
+    );
+  }
+
+  if (isDemoSession(session)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        folder_id: folderId ?? null,
+        checks: {
+          signedIn: true,
+          hasAccessToken: false,
+          folderVisibleToSignedInUser: false,
+        },
+        message:
+          "Demo account uses realistic mock data and does not connect to Google Drive.",
+      },
+      { status: 200 },
     );
   }
 

@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/auth";
+import { getCurrentServiceEntries } from "@/lib/current-user-data";
+import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 import {
   appendRow,
   deleteRowById,
-  getCachedRows,
   getSheetCacheTag,
 } from "@/lib/sheets";
-import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
 import type { CreateServiceEntryInput, ServiceEntry } from "@/types/car";
 
 const SHEET_NAME = "service_entries";
 
 export async function GET() {
   try {
-    const rows = await getCachedRows(SHEET_NAME);
-
-    const entries = rows
-      .map(mapRowToServiceEntry)
-      .filter(isServiceEntryValid)
-      .sort((a, b) => b.odometer - a.odometer);
+    const entries = (await getCurrentServiceEntries()).sort(
+      (a, b) => b.odometer - a.odometer,
+    );
 
     return NextResponse.json({ entries });
   } catch (error) {
@@ -34,6 +32,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("add service entries") },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as CreateServiceEntryInput;
 
     if (!body.date || !body.odometer || !body.service_type) {
@@ -88,6 +95,15 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("delete service entries") },
+        { status: 403 },
+      );
+    }
+
     const entryId = request.nextUrl.searchParams.get("id") ?? "";
 
     if (!entryId) {

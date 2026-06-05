@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { auth } from "@/auth";
+import { getCurrentVehicleProfile } from "@/lib/current-user-data";
+import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 import { getCachedRows, getSheetCacheTag, upsertRowById } from "@/lib/sheets";
 import {
   isVehicleProfileValid,
@@ -12,11 +15,7 @@ const PROFILE_ID = "vehicle-profile";
 
 export async function GET() {
   try {
-    const rows = await getCachedRows(SHEET_NAME);
-    const profile = rows
-      .map(mapRowToVehicleProfile)
-      .filter(isVehicleProfileValid)
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
+    const profile = await getCurrentVehicleProfile();
 
     return NextResponse.json({ profile });
   } catch (error) {
@@ -31,6 +30,15 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("save vehicle changes") },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json()) as UpdateVehicleProfileInput;
 
     if (!body.make?.trim() || !body.model?.trim()) {

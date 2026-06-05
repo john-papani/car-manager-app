@@ -13,7 +13,7 @@ type DeleteEntryButtonProps = {
 export default function DeleteEntryButton({
   entryId,
   endpoint,
-  label = "Διαγραφή",
+  label = "Delete",
   confirmMessage,
 }: DeleteEntryButtonProps) {
   const router = useRouter();
@@ -33,7 +33,16 @@ export default function DeleteEntryButton({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete entry");
+        let message = "Failed to delete entry";
+
+        try {
+          const data = (await response.json()) as { message?: string };
+          message = data.message || message;
+        } catch {
+          // Ignore JSON parse failures and keep fallback text.
+        }
+
+        throw new Error(message);
       }
 
       startTransition(() => {
@@ -41,7 +50,11 @@ export default function DeleteEntryButton({
       });
     } catch (error) {
       console.error(error);
-      alert("Η διαγραφή απέτυχε.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Delete failed.",
+      );
       setIsDeleting(false);
     }
   }
@@ -55,7 +68,7 @@ export default function DeleteEntryButton({
       disabled={disabled}
       className="inline-flex items-center justify-center rounded-full border border-[rgb(173_84_37_/_0.12)] bg-[rgb(255_251_246_/_0.88)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] transition hover:border-[rgb(173_84_37_/_0.22)] hover:bg-white disabled:cursor-not-allowed disabled:opacity-55"
     >
-      {disabled ? "Διαγραφή..." : label}
+      {disabled ? "Deleting..." : label}
     </button>
   );
 }
