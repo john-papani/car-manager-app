@@ -1,10 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
 import { getCurrentServiceEntries } from "@/lib/current-user-data";
 import type { ServiceEntry } from "@/types/car";
 
-export default async function ServicePage() {
+async function ServiceContent() {
   const session = await auth();
   let entries: ServiceEntry[] = [];
 
@@ -158,5 +159,13 @@ export default async function ServicePage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function ServicePage() {
+  return (
+    <Suspense fallback={null}>
+      <ServiceContent />
+    </Suspense>
   );
 }

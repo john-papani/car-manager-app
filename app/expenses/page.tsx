@@ -1,10 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
 import { getCurrentExpenseEntries } from "@/lib/current-user-data";
 import type { ExpenseEntry } from "@/types/car";
 
-export default async function ExpensesPage() {
+async function ExpensesContent() {
   const session = await auth();
   let entries: ExpenseEntry[] = [];
 
@@ -155,5 +156,13 @@ export default async function ExpensesPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function ExpensesPage() {
+  return (
+    <Suspense fallback={null}>
+      <ExpensesContent />
+    </Suspense>
   );
 }

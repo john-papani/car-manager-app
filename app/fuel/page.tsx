@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
@@ -8,7 +9,7 @@ import {
 } from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
-export default async function FuelPage() {
+async function FuelContent() {
   const session = await auth();
   let entries: FuelEntry[] = [];
 
@@ -144,5 +145,13 @@ export default async function FuelPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function FuelPage() {
+  return (
+    <Suspense fallback={null}>
+      <FuelContent />
+    </Suspense>
   );
 }

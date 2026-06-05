@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import {
@@ -21,7 +22,7 @@ import type {
   VehicleProfile,
 } from "@/types/car";
 
-export default async function DashboardPage() {
+async function DashboardContent() {
   const session = await auth();
   let fuelEntries: FuelEntry[] = [];
   let expenseEntries: ExpenseEntry[] = [];
@@ -249,5 +250,13 @@ export default async function DashboardPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }
