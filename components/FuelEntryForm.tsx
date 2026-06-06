@@ -21,6 +21,13 @@ export default function FuelEntryForm() {
   const [uploadError, setUploadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const normalizeDecimalInput = (value: string) => {
+    return value
+      .replace(",", ".")
+      .replace(/[^0-9.]/g, "")
+      .replace(/(\..*)\./g, "$1");
+  };
+
   function updateField(name: string, value: string | boolean) {
     setForm((previous) => ({
       ...previous,
@@ -54,6 +61,9 @@ export default function FuelEntryForm() {
     setUploadError("");
 
     try {
+      const liters = parseFloat(form.liters);
+      const totalCost = parseFloat(form.total_cost);
+
       let receiptUpload:
         | {
             file_id?: string;
@@ -68,8 +78,8 @@ export default function FuelEntryForm() {
       await createFuelEntry({
         date: form.date,
         odometer: Number(form.odometer),
-        liters: Number(form.liters),
-        total_cost: Number(form.total_cost),
+        liters,
+        total_cost: totalCost,
         station: form.station,
         is_full_tank: form.is_full_tank,
         notes: form.notes,
@@ -142,11 +152,13 @@ export default function FuelEntryForm() {
                 Λίτρα
               </label>
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
                 step="0.01"
                 value={form.liters}
-                onChange={(event) => updateField("liters", event.target.value)}
+                onChange={(event) =>
+                  updateField("liters", normalizeDecimalInput(event.target.value))
+                }
                 placeholder="0.00"
                 className="w-full rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3.5 text-base transition focus:ring-2 focus:ring-[var(--accent)]/10 focus:border-[var(--accent)]"
                 required
@@ -158,11 +170,16 @@ export default function FuelEntryForm() {
                 Κόστος €
               </label>
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
                 step="0.01"
                 value={form.total_cost}
-                onChange={(event) => updateField("total_cost", event.target.value)}
+                onChange={(event) =>
+                  updateField(
+                    "total_cost",
+                    normalizeDecimalInput(event.target.value),
+                  )
+                }
                 placeholder="0.00"
                 className="w-full rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3.5 text-base transition focus:ring-2 focus:ring-[var(--accent)]/10 focus:border-[var(--accent)]"
                 required
