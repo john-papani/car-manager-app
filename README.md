@@ -1,29 +1,30 @@
 # Car Manager
 
-A lightweight car tracking app built with Next.js, React, TypeScript, Tailwind CSS, and Google Sheets as the primary data store.
+A mobile-first vehicle cost tracker built with Next.js, TypeScript, and Google Sheets.
 
-The project is designed as a practical MVP for tracking:
+Car Manager helps a driver keep fuel fill-ups, service history, and other car expenses in one place through a lightweight app interface, while using Google Sheets as a simple, inspectable backend.
 
-- fuel fill-ups
-- service history
-- non-fuel car expenses
-- optional receipt uploads to Google Drive
+## Overview
 
-## MVP Goal
+This project was built as a practical MVP for tracking recurring vehicle costs without setting up a traditional database.
 
-The app solves one simple problem:
+Instead of hiding everything behind an admin panel or database dashboard, the app stores structured data in Google Sheets, making it easy to review, maintain, and back up entries outside the app as well.
 
-Store all recurring car costs in one place with a mobile-friendly interface and a spreadsheet-backed workflow that is easy to maintain.
+## Features
 
-## Core Features
-
-- Dashboard with quick stats and latest activity
-- Fuel history with liters, total cost, price per liter, and consumption helpers
-- Service history with cost, odometer, location, and next-service reminder mileage
-- Expense history for insurance, tolls, parking, and other non-fuel costs
-- Google Sheets persistence
-- Automatic sheet/tab creation with first-row headers
-- Optional receipt upload endpoint using Google Drive
+- Fuel tracking with date, odometer, liters, total cost, station, notes, and full-tank flag
+- Automatic fuel calculations such as price per liter, average consumption, and cost trends
+- Service history tracking with mileage, cost, workshop/location, and next service odometer
+- Non-fuel expense tracking for insurance, tolls, parking, and other car-related costs
+- Dashboard with summary cards and visual charts for fuel consumption and spending distribution
+- Vehicle profile management for make, model, trim, year, plate, engine, and other details
+- Demo account for quick testing without connecting Google services
+- Google sign-in for Drive-connected features
+- Optional receipt photo upload to Google Drive for fuel entries
+- Monthly report export/print flow from the dashboard
+- Delete actions for entries
+- Automatic Google Sheets tab creation and header initialization
+- Optional Google Calendar event creation for fuel entries
 
 ## Tech Stack
 
@@ -31,191 +32,154 @@ Store all recurring car costs in one place with a mobile-friendly interface and 
 - React 19
 - TypeScript
 - Tailwind CSS 4
+- Auth.js / NextAuth
 - Google Sheets API
 - Google Drive API
-- Auth.js (Google OAuth for personal Drive uploads)
+- Google Calendar API
 - UUID
-
-## Project Structure
-
-```text
-app/
-  api/
-    expenses/route.ts
-    fuel/route.ts
-    receipts/route.ts
-    service/route.ts
-  expenses/
-  fuel/
-  service/
-  page.tsx
-
-components/
-  BottomNav.tsx
-  ExpenseEntryForm.tsx
-  FuelEntryForm.tsx
-  ServiceEntryForm.tsx
-  StatCard.tsx
-
-lib/
-  expense-entry.ts
-  fuel-calculations.ts
-  fuel-entry.ts
-  google.ts
-  service-entry.ts
-  sheets.ts
-
-services/
-  expenseService.ts
-  fuelService.ts
-  serviceService.ts
-
-types/
-  car.ts
-```
+- ESLint
 
 ## How It Works
 
-The app uses a simple flow:
+1. The user signs in with either the demo account or Google.
+2. Forms submit data to route handlers inside `app/api`.
+3. Route handlers validate and normalize the payload.
+4. Data is written into the corresponding Google Sheet tab.
+5. Server-rendered pages fetch fresh data from Google Sheets.
+6. The dashboard calculates summaries and renders charts from typed entries.
 
-1. The user fills a form in the UI.
-2. A client-side service sends the payload to a route handler in `app/api/...`.
-3. The route validates and normalizes the input.
-4. The data is appended to the relevant Google Sheet tab.
-5. The page reloads and reads fresh rows from Google Sheets.
-6. Rows are mapped into typed objects and rendered in the UI.
+## Entry Types
 
-## MVP Process Flow
+### Fuel entries
 
-### Fuel Flow
+Store:
 
-1. Open `/fuel/new`
-2. Enter date, odometer, liters, total cost, station, and notes
-3. Submit the form
-4. `POST /api/fuel` calculates `price_per_liter`
-5. The record is stored in `fuel_entries`
-6. `/fuel` and the dashboard read the updated history and stats
+- date
+- odometer
+- liters
+- total cost
+- calculated price per liter
+- station
+- full tank status
+- notes
+- optional receipt file and URL
 
-### Service Flow
+### Service entries
 
-1. Open `/service/new`
-2. Enter service type, date, odometer, cost, workshop, and optional next-service mileage
-3. Submit the form
-4. `POST /api/service` stores the record in `service_entries`
-5. `/service` shows the latest work and next service target
+Store:
 
-### Expense Flow
+- date
+- odometer
+- service type
+- total cost
+- location
+- next service odometer
+- notes
 
-1. Open `/expenses/new`
-2. Enter category, date, total cost, vendor, and optional odometer
-3. Submit the form
-4. `POST /api/expenses` stores the record in `expense_entries`
-5. `/expenses` updates totals and expense history
+### Expense entries
 
-## Data Model
+Store:
 
-### `fuel_entries`
+- date
+- category
+- total cost
+- optional odometer
+- vendor
+- notes
 
-First row headers:
+### Vehicle profile
 
-```text
-id | date | odometer | liters | total_cost | price_per_liter | station | is_full_tank | notes | receipt_file_id | receipt_url | created_at | updated_at
-```
+Store:
 
-### `service_entries`
+- make
+- model
+- trim
+- year
+- license plate
+- fuel type
+- transmission
+- engine
+- color
 
-First row headers:
+## Getting Started
 
-```text
-id | date | odometer | total_cost | service_type | location | next_service_odometer | notes | created_at | updated_at
-```
-
-### `expense_entries`
-
-First row headers:
-
-```text
-id | date | category | total_cost | odometer | vendor | notes | created_at | updated_at
-```
-
-## Google Sheets Behavior
-
-The app is defensive about sheet setup:
-
-- if a tab does not exist, it is created automatically
-- if the first row headers are missing or incorrect, they are written automatically
-- rows are normalized into typed objects before rendering
-
-This logic lives in `lib/sheets.ts`.
-
-## Environment Variables
-
-Create a local `.env.local` file with the following values:
-
-```env
-GOOGLE_CLIENT_EMAIL="your-service-account@project.iam.gserviceaccount.com"
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_SHEET_ID="your_google_sheet_id"
-GOOGLE_DRIVE_RECEIPTS_FOLDER_ID="your_drive_folder_id"
-```
-
-## Google Setup
-
-### 1. Create a Google Cloud project
-
-- Enable the Google Sheets API
-- Enable the Google Drive API
-
-### 2. Create a service account
-
-- Generate a JSON key
-- Copy the service account email and private key into `.env.local`
-
-### 3. Share your Google Sheet
-
-- Open the target Google Sheet
-- Share it with the service account email
-- Give it Editor access
-
-### 4. Optional: create a Drive folder for receipts
-
-- Create a folder in your personal Google Drive or Shared Drive
-- Copy that folder ID into `GOOGLE_DRIVE_RECEIPTS_FOLDER_ID`
-
-### 5. Configure Google OAuth for Auth.js
-
-- In Google Cloud, create OAuth credentials for a Web application
-- Add this redirect URI in development:
-  `http://localhost:3000/api/auth/callback/google`
-- Set these variables in `.env.local`:
-  `AUTH_GOOGLE_ID`
-  `AUTH_GOOGLE_SECRET`
-  `AUTH_SECRET`
-
-Important:
-
-- Google Sheets still use the service account
-- Receipt uploads use the Google account that is currently signed in to the app
-- The signed-in Google user must have access to the target Drive folder
-
-## Local Development
-
-Install dependencies:
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-Run the app:
+### 2. Create `.env.local`
+
+```env
+GOOGLE_CLIENT_EMAIL="your-service-account@project.iam.gserviceaccount.com"
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_SHEET_ID="your_google_sheet_id"
+
+# Optional for receipt uploads
+GOOGLE_DRIVE_RECEIPTS_FOLDER_ID="your_drive_folder_id"
+
+# Optional for fuel calendar events
+GOOGLE_CALENDAR_ID="your_calendar_id"
+
+# Required for Google sign-in
+AUTH_GOOGLE_ID="your_google_oauth_client_id"
+AUTH_GOOGLE_SECRET="your_google_oauth_client_secret"
+AUTH_SECRET="your_auth_secret"
+```
+
+### 3. Run the development server
 
 ```bash
 npm run dev
 ```
 
-Open:
+Open `http://localhost:3000`
+
+## Demo Login
+
+You can test the app locally with the built-in demo account:
+
+- Username: `user`
+- Password: `user`
+
+The demo account is read-only and uses mock data.
+
+## Google Setup
+
+### Google Sheets
+
+- Create a Google Cloud project
+- Enable the Google Sheets API
+- Create a service account
+- Generate a JSON key
+- Share your target Google Sheet with the service account email as Editor
+
+### Google Drive
+
+Used for optional receipt uploads.
+
+- Enable the Google Drive API
+- Create a Drive folder
+- Add its ID to `GOOGLE_DRIVE_RECEIPTS_FOLDER_ID`
+- Sign in with a Google account that has access to that folder
+
+### Google Calendar
+
+Used for optional fuel-entry calendar events.
+
+- Enable the Google Calendar API
+- Set `GOOGLE_CALENDAR_ID`
+
+### Google OAuth
+
+Used for Google sign-in inside the app.
+
+- Create OAuth credentials for a Web application
+- Add this redirect URI in development:
 
 ```text
-http://localhost:3000
+http://localhost:3000/api/auth/callback/google
 ```
 
 ## Available Scripts
@@ -227,52 +191,72 @@ npm run start
 npm run lint
 ```
 
-## Development Notes
+## Project Structure
 
-- Route handlers live inside `app/api`
-- Data fetching is server-side for page rendering
-- Form submission is client-side
-- The project currently uses Google Sheets as the database layer
-- Receipt uploads are supported by `app/api/receipts/route.ts`, but are optional in the current MVP
+```text
+app/
+  api/
+    auth/[...nextauth]/
+    drive-check/
+    expenses/
+    fuel/
+    receipts/
+    service/
+    vehicle/
+  account/
+  expenses/
+  fuel/
+  login/
+  service/
+  page.tsx
+  layout.tsx
 
-## Current MVP Scope
+components/
+  FuelEntryForm.tsx
+  ExpenseEntryForm.tsx
+  ServiceEntryForm.tsx
+  VehicleProfileForm.tsx
+  ShareReportButton.tsx
+  ConsumptionBarChart.tsx
+  CostDonutChart.tsx
+  DeleteEntryButton.tsx
 
-Included:
+lib/
+  google.ts
+  sheets.ts
+  calendar.ts
+  current-user-data.ts
+  demo-mode.ts
+  fuel-calculations.ts
 
-- create and list fuel entries
-- create and list service entries
-- create and list expense entries
-- dashboard summary for fuel
-- mobile-first UI
-- spreadsheet-backed persistence
+services/
+  fuelService.ts
+  expenseService.ts
+  serviceService.ts
+  vehicleService.ts
 
-Not yet fully expanded:
+types/
+  car.ts
+  next-auth.d.ts
 
-- edit and delete flows
-- authentication and multi-user support
-- charts and reporting
-- recurring expense automation
-- file attachment UI integration in all forms
-- reminders/notifications
+public/
+  manifest.json
+  car-icon.svg
+```
 
-## Recommended Next Steps
+## Known Limitations
 
-- add edit and delete actions for all entry types
-- expand dashboard to include service and expense summaries
-- connect receipt upload in the forms
-- add category filters and date filters
-- add monthly and yearly reporting
-- add export and backup utilities
+- Google Sheets is practical for an MVP, but it is not a replacement for a full relational database
+- Edit/update flows for entries are not implemented yet
+- Receipt uploads are currently connected to fuel entries only
+- Multi-user data separation is still limited in scope
+- Production deployment would need stronger operational hardening around secrets and Google setup
 
-## Security Notes
+## Roadmap
 
-- Do not commit real secrets to the repository
-- Keep `.env.local` private
-- If real credentials were ever exposed during development, rotate them immediately
-- Share Google Sheets and Drive folders only with the required service account
-
-## Summary
-
-Car Manager is a clean MVP for tracking vehicle running costs with minimal infrastructure.
-
-Instead of a traditional database, it uses Google Sheets as a practical operational backend, making it easy to inspect, edit, and maintain data while still keeping a proper app structure in code.
+- Add edit/update flows for all entry types
+- Add filters by date, category, and mileage
+- Expand reporting with monthly and yearly summaries
+- Improve export and backup options
+- Add stronger multi-user support
+- Improve attachment handling across more forms
