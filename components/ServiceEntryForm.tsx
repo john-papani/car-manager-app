@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceEntry } from "@/services/serviceService";
+import { useToast } from "@/components/AppProviders";
 import FormActionBar from "@/components/FormActionBar";
+import FormShell from "@/components/FormShell";
 
 export default function ServiceEntryForm() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -45,8 +49,11 @@ export default function ServiceEntryForm() {
         notes: form.notes,
       });
 
-      router.push("/service");
-      router.refresh();
+      startTransition(() => {
+        router.replace("/service");
+        router.refresh();
+      });
+      showToast("Το service αποθηκεύτηκε.", "success");
     } catch (error) {
       console.error(error);
       setSubmitError("Η αποθήκευση του service δεν ολοκληρώθηκε.");
@@ -56,21 +63,9 @@ export default function ServiceEntryForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-[1.95rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow)]"
-    >
-      <div className="rounded-[1.6rem] border border-white/65 bg-white/50 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
-          Συντήρηση
-        </p>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-          Κράτα καθαρό ιστορικό για εργασίες, κόστος και επόμενα χιλιόμετρα ώστε
-          να μη χάνεται τίποτα.
-        </p>
-      </div>
-
-      <div className="mt-4 space-y-4">
+    <form onSubmit={handleSubmit}>
+      <FormShell>
+      <div className="space-y-4">
         <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card-strong)] p-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -186,12 +181,12 @@ export default function ServiceEntryForm() {
       ) : null}
 
       <FormActionBar
-        disabled={isSubmitting}
-        isSubmitting={isSubmitting}
+        disabled={isSubmitting || isPending}
+        isSubmitting={isSubmitting || isPending}
         idleLabel="Αποθήκευση service"
-        submittingLabel="Αποθήκευση..."
-        hint="Πέρασε την εργασία τώρα και θα τη βρίσκεις εύκολα στο ιστορικό συντήρησης."
+        submittingLabel={isPending ? "Μετάβαση..." : "Αποθήκευση..."}
       />
+      </FormShell>
     </form>
   );
 }

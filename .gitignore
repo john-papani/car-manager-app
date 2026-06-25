@@ -52,3 +52,5 @@ sketch
 
 .history/
 car-manager*
+.cursor/
+skills-lock.json

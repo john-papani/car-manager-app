@@ -9,6 +9,7 @@ import {
   deleteRowById,
   getRowById,
   getSheetCacheTag,
+  upsertRowById,
 } from "@/lib/sheets";
 import type { CreateFuelEntryInput, FuelEntry } from "@/types/car";
 
@@ -91,11 +92,13 @@ export async function POST(request: NextRequest) {
       entry.updated_at,
     ]);
 
-    try {
-      await createFuelCalendarEvent(entry);
-    } catch (calendarError) {
+    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidatePath("/fuel");
+    revalidatePath("/");
+
+    void createFuelCalendarEvent(entry).catch((calendarError) => {
       console.error("Calendar event creation failed:", calendarError);
-    }
+    });
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
@@ -108,6 +111,71 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (isDemoSession(session)) {
+      return NextResponse.json(
+        { message: getDemoReadOnlyMessage("update fuel entries") },
+        { status: 403 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      id?: string;
+      receipt_file_id?: string;
+      receipt_url?: string;
+    };
+
+    if (!body.id) {
+      return NextResponse.json(
+        { message: "Missing entry id" },
+        { status: 400 },
+      );
+    }
+
+    const existing = await getRowById(SHEET_NAME, body.id);
+
+    if (!existing) {
+      return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    const updatedAt = new Date().toISOString();
+
+    await upsertRowById(SHEET_NAME, body.id, [
+      existing.id,
+      existing.date,
+      existing.odometer,
+      existing.liters,
+      existing.total_cost,
+      existing.price_per_liter,
+      existing.station,
+      existing.is_full_tank === "TRUE" || existing.is_full_tank === "true"
+        ? "TRUE"
+        : "FALSE",
+      existing.notes,
+      body.receipt_file_id ?? existing.receipt_file_id,
+      body.receipt_url ?? existing.receipt_url,
+      existing.created_at,
+      updatedAt,
+    ]);
+
+    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidatePath("/fuel");
+    revalidatePath("/");
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { message: "Failed to update fuel entry" },
+      { status: 500 },
+    );
+  }
+}
 
 export async function DELETE(request: NextRequest) {
   try {

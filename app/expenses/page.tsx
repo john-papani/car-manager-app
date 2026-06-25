@@ -1,7 +1,11 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
+import EmptyState from "@/components/EmptyState";
+import MiniStat from "@/components/MiniStat";
+import PageHeader from "@/components/PageHeader";
+import PageMain from "@/components/PageMain";
+import PageSkeleton from "@/components/PageSkeleton";
 import { getCurrentExpenseEntries } from "@/lib/current-user-data";
 import type { ExpenseEntry } from "@/types/car";
 
@@ -27,49 +31,21 @@ async function ExpensesContent() {
   const latestEntry = entries[0];
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md px-4 py-5 pb-32">
-      <section className="rounded-[1.9rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_48%,#ca6f3d_155%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.2)]">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/62">
-              Οικονομικά
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Έξοδα
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-white/72">
-              Ασφάλεια, διόδια, parking και κάθε άλλο κόστος εκτός καυσίμων.
-            </p>
-          </div>
+    <PageMain>
+      <PageHeader
+        eyebrow="Οικονομικά"
+        title="Έξοδα"
+        description="Ασφάλεια, διόδια, parking και κάθε άλλο κόστος εκτός καυσίμων."
+        actionHref="/expenses/new"
+        actionLabel="+ Νέο"
+      />
 
-          <Link
-            href="/expenses/new"
-            className="rounded-full bg-white px-4 py-2.5 text-sm font-semibold !text-[var(--navy)] shadow-[0_14px_28px_rgb(255_255_255_/_0.18)]"
-          >
-            + Νέο
-          </Link>
-        </div>
-      </section>
-
-      <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Σύνολο
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-            {totalCost.toFixed(2)}€
-          </p>
-        </div>
-
-        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Κατηγορίες
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-            {categories}
-          </p>
-        </div>
-      </section>
+      {entries.length > 0 ? (
+        <section className="mt-5 grid grid-cols-2 gap-3">
+          <MiniStat label="Σύνολο" value={`${totalCost.toFixed(2)}€`} />
+          <MiniStat label="Κατηγορίες" value={String(categories)} />
+        </section>
+      ) : null}
 
       {latestEntry ? (
         <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
@@ -88,15 +64,12 @@ async function ExpensesContent() {
 
       <section className="mt-5 space-y-3">
         {entries.length === 0 ? (
-          <div className="rounded-[1.9rem] border border-dashed border-[var(--line)] bg-[var(--card)] p-6 text-center shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-            <p className="font-semibold text-[var(--foreground)]">
-              Δεν υπάρχουν ακόμα καταχωρήσεις εξόδων.
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Πρόσθεσε το πρώτο έξοδο για να αρχίσει να χτίζεται το οικονομικό
-              ιστορικό.
-            </p>
-          </div>
+          <EmptyState
+            title="Δεν υπάρχουν έξοδα"
+            description="Πρόσθεσε το πρώτο για να βλέπεις πού πηγαίνουν τα χρήματα."
+            actionHref="/expenses/new"
+            actionLabel="Πρώτο έξοδο"
+          />
         ) : (
           entries.map((entry) => (
             <article
@@ -110,7 +83,6 @@ async function ExpensesContent() {
                     {entry.category}
                   </h2>
                 </div>
-
                 <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
                   {entry.total_cost.toFixed(2)}€
                 </span>
@@ -133,7 +105,6 @@ async function ExpensesContent() {
                     {entry.vendor || "—"}
                   </p>
                 </div>
-
                 <div className="rounded-[1.35rem] bg-white/70 p-3">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                     Km
@@ -155,13 +126,13 @@ async function ExpensesContent() {
           ))
         )}
       </section>
-    </main>
+    </PageMain>
   );
 }
 
 export default function ExpensesPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ExpensesContent />
     </Suspense>
   );

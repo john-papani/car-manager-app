@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import ServiceEntryForm from "@/components/ServiceEntryForm";
 import EntryPageHeader from "@/components/EntryPageHeader";
+import PageMain from "@/components/PageMain";
 
 export default function NewServiceEntryPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-12">
+    <PageMain compact>
       <EntryPageHeader
-        eyebrow="Service"
+        eyebrow="Συντήρηση"
         title="Νέα εργασία"
-        description="Αποθήκευσε ό,τι έγινε στο αυτοκίνητο και κράτα ξεκάθαρη εικόνα για χιλιόμετρα, κόστος και επόμενο service."
+        description="Κατέγραψε την εργασία, το κόστος και τα χιλιόμετρα."
         backHref="/service"
         backLabel="Ιστορικό"
-        accentLabel="Maintenance"
       />
 
       <div className="mt-5">
@@ -19,6 +19,6 @@ export default function NewServiceEntryPage() {
           <ServiceEntryForm />
         </Suspense>
       </div>
-    </main>
+    </PageMain>
   );
 }

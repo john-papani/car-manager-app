@@ -12,6 +12,8 @@ import {
   getRecentConsumptionTrend,
 } from "@/lib/fuel-calculations";
 import StatCard from "@/components/StatCard";
+import PageMain from "@/components/PageMain";
+import PageSkeleton from "@/components/PageSkeleton";
 import ConsumptionBarChart from "@/components/ConsumptionBarChart";
 import CostDonutChart from "@/components/CostDonutChart";
 import ShareReportButton from "@/components/ShareReportButton";
@@ -30,27 +32,15 @@ async function DashboardContent() {
   let vehicleProfile: VehicleProfile | null = null;
 
   try {
-    fuelEntries = await getCurrentFuelEntries(session);
+    [fuelEntries, expenseEntries, serviceEntries, vehicleProfile] =
+      await Promise.all([
+        getCurrentFuelEntries(session),
+        getCurrentExpenseEntries(session),
+        getCurrentServiceEntries(session),
+        getCurrentVehicleProfile(session),
+      ]);
   } catch (error) {
-    console.error("Failed to load dashboard fuel entries", error);
-  }
-
-  try {
-    expenseEntries = await getCurrentExpenseEntries(session);
-  } catch (error) {
-    console.error("Failed to load dashboard expense entries", error);
-  }
-
-  try {
-    serviceEntries = await getCurrentServiceEntries(session);
-  } catch (error) {
-    console.error("Failed to load dashboard service entries", error);
-  }
-
-  try {
-    vehicleProfile = await getCurrentVehicleProfile(session);
-  } catch (error) {
-    console.error("Failed to load dashboard vehicle profile", error);
+    console.error("Failed to load dashboard data", error);
   }
 
   const stats = calculateFuelStats(fuelEntries);
@@ -69,10 +59,10 @@ async function DashboardContent() {
     ? [vehicleProfile.make, vehicleProfile.model, vehicleProfile.trim]
         .filter(Boolean)
         .join(" ")
-    : "Ford Puma 1.0 125cc";
+    : "Το όχημά σου";
 
   return (
-    <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
+    <PageMain>
       <section className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_52%,#ca6f3d_150%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.28)]">
         <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute -bottom-12 left-8 h-36 w-36 rounded-full bg-[rgb(255_214_183_/_0.12)] blur-3xl" />
@@ -105,7 +95,7 @@ async function DashboardContent() {
         </div>
 
         <p className="relative mt-3 max-w-[18rem] text-sm font-medium leading-relaxed text-white/80">
-          Όλα τα κόστη και τα γεμίσματα σε μια ήσυχη, καθαρή εικόνα.
+          Όλα τα κόστη και τα γεμίσματα σε μία καθαρή εικόνα.
         </p>
 
         <div className="relative mt-6 grid grid-cols-2 gap-3">
@@ -113,14 +103,14 @@ async function DashboardContent() {
             href="/fuel/new"
             className="flex items-center justify-center rounded-2xl bg-white px-4 py-3.5 text-center text-sm font-bold !text-[var(--navy)] shadow-lg active:scale-95"
           >
-            + Νέο γέμισμα
+            + Γέμισμα
           </Link>
 
           <Link
-            href="/service"
+            href="/expenses/new"
             className="flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-sm font-bold text-white backdrop-blur-md active:scale-95"
           >
-            Service
+            + Έξοδο
           </Link>
         </div>
       </section>
@@ -243,19 +233,26 @@ async function DashboardContent() {
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-            Δεν υπάρχει ακόμα καταχώρηση. Πρόσθεσε το πρώτο γέμισμα για να
-            αρχίσουν να φαίνονται τα στατιστικά.
-          </p>
+          <>
+            <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+              Πρόσθεσε το πρώτο γέμισμα για να εμφανιστούν τα στατιστικά.
+            </p>
+            <Link
+              href="/fuel/new"
+              className="mt-4 inline-flex rounded-full bg-[var(--navy)] px-4 py-2.5 text-sm font-semibold !text-white"
+            >
+              Πρώτο γέμισμα
+            </Link>
+          </>
         )}
       </section>
-    </main>
+    </PageMain>
   );
 }
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <DashboardContent />
     </Suspense>
   );

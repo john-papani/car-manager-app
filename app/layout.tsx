@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import "./globals.css";
 import AppBottomNav from "@/components/AppBottomNav";
+import AppProviders from "@/components/AppProviders";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
@@ -25,15 +26,17 @@ export default async function RootLayout({
   return (
     <html lang="el">
       <body className="text-[var(--foreground)] antialiased">
-        <AppShell
-          bottomNav={
-            <Suspense fallback={null}>
-              <AppBottomNav />
-            </Suspense>
-          }
-        >
-          {children}
-        </AppShell>
+        <AppProviders>
+          <AppShell
+            bottomNav={
+              <Suspense fallback={null}>
+                <AppBottomNav />
+              </Suspense>
+            }
+          >
+            {children}
+          </AppShell>
+        </AppProviders>
       </body>
     </html>
   );

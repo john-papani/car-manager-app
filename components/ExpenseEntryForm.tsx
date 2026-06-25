@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createExpenseEntry } from "@/services/expenseService";
+import { useToast } from "@/components/AppProviders";
 import FormActionBar from "@/components/FormActionBar";
+import FormShell from "@/components/FormShell";
 
 export default function ExpenseEntryForm() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -41,8 +45,11 @@ export default function ExpenseEntryForm() {
         notes: form.notes,
       });
 
-      router.push("/expenses");
-      router.refresh();
+      startTransition(() => {
+        router.replace("/expenses");
+        router.refresh();
+      });
+      showToast("Το έξοδο αποθηκεύτηκε.", "success");
     } catch (error) {
       console.error(error);
       setSubmitError("Η αποθήκευση του εξόδου δεν ολοκληρώθηκε.");
@@ -52,21 +59,9 @@ export default function ExpenseEntryForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-[1.95rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow)]"
-    >
-      <div className="rounded-[1.6rem] border border-white/65 bg-white/50 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
-          Γενικά έξοδα
-        </p>
-        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-          Κατέγραψε γρήγορα οποιοδήποτε έξοδο του οχήματος για να μένει πάντα
-          ξεκάθαρη η συνολική εικόνα του κόστους.
-        </p>
-      </div>
-
-      <div className="mt-4 space-y-4">
+    <form onSubmit={handleSubmit}>
+      <FormShell>
+      <div className="space-y-4">
         <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card-strong)] p-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -166,12 +161,12 @@ export default function ExpenseEntryForm() {
       ) : null}
 
       <FormActionBar
-        disabled={isSubmitting}
-        isSubmitting={isSubmitting}
+        disabled={isSubmitting || isPending}
+        isSubmitting={isSubmitting || isPending}
         idleLabel="Αποθήκευση εξόδου"
-        submittingLabel="Αποθήκευση..."
-        hint="Συμπλήρωσε καθαρή κατηγορία και ποσό για να μένει χρήσιμο το οικονομικό ιστορικό."
+        submittingLabel={isPending ? "Μετάβαση..." : "Αποθήκευση..."}
       />
+      </FormShell>
     </form>
   );
 }

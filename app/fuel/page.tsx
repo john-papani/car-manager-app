@@ -1,11 +1,17 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
+import EmptyState from "@/components/EmptyState";
+import FuelPageFeedback from "@/components/FuelPageFeedback";
+import MiniStat from "@/components/MiniStat";
+import PageHeader from "@/components/PageHeader";
+import PageMain from "@/components/PageMain";
+import PageSkeleton from "@/components/PageSkeleton";
 import { getCurrentFuelEntries } from "@/lib/current-user-data";
 import {
   calculateConsumption,
   calculateCostPerKm,
+  calculateFuelStats,
 } from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
@@ -20,73 +26,87 @@ async function FuelContent() {
   }
 
   entries = entries.sort((a, b) => b.odometer - a.odometer);
+  const stats = calculateFuelStats(entries);
 
   const chronologicalEntries = [...entries].sort(
-    (a, b) => a.odometer - b.odometer
+    (a, b) => a.odometer - b.odometer,
   );
 
+  const previousById = new Map<string, FuelEntry | undefined>();
+  for (let index = 0; index < chronologicalEntries.length; index += 1) {
+    previousById.set(
+      chronologicalEntries[index].id,
+      index > 0 ? chronologicalEntries[index - 1] : undefined,
+    );
+  }
+
   return (
-    <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-32">
-      <div className="mb-5 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-            Ιστορικό
-          </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
-            Καύσιμα
-          </h1>
-        </div>
+    <PageMain>
+      <FuelPageFeedback />
 
-        <Link
-          href="/fuel/new"
-          className="rounded-full bg-[var(--navy)] px-4 py-2.5 text-sm font-semibold !text-white shadow-[0_14px_28px_rgb(18_49_59_/_0.16)] "
-        >
-          + Νέο
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow="Καύσιμα"
+        title="Ιστορικό γεμισμάτων"
+        description="Όλα τα γεμίσματα, η κατανάλωση και το κόστος ανά χιλιόμετρο σε μία λίστα."
+        actionHref="/fuel/new"
+        actionLabel="+ Νέο"
+      />
 
-      <div className="space-y-3">
+      {entries.length > 0 ? (
+        <section className="mt-5 grid grid-cols-2 gap-3">
+          <MiniStat label="Γεμίσματα" value={String(entries.length)} />
+          <MiniStat label="Σύνολο" value={`${stats.totalCost.toFixed(2)}€`} />
+          <MiniStat
+            label="Μέση κατανάλωση"
+            value={
+              stats.consumptionSamples > 0
+                ? `${stats.averageConsumption.toFixed(2)} L/100`
+                : "—"
+            }
+          />
+          <MiniStat
+            label="Μέση τιμή"
+            value={`${stats.averagePricePerLiter.toFixed(3)}€/L`}
+          />
+        </section>
+      ) : null}
+
+      <section className="mt-5 space-y-3">
         {entries.length === 0 ? (
-          <div className="rounded-[1.9rem] border border-dashed border-[var(--line)] bg-[var(--card)] p-6 text-center shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-            <p className="font-semibold text-[var(--foreground)]">
-              Δεν έχεις ακόμα καταχωρήσεις.
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Πρόσθεσε το πρώτο γέμισμα για να αρχίσουν να εμφανίζονται οι
-              μετρήσεις κατανάλωσης.
-            </p>
-          </div>
+          <EmptyState
+            title="Δεν έχεις ακόμα γεμίσματα"
+            description="Πρόσθεσε το πρώτο για να ξεκινήσουν τα στατιστικά κατανάλωσης."
+            actionHref="/fuel/new"
+            actionLabel="Πρώτο γέμισμα"
+          />
         ) : (
           entries.map((entry) => {
-            const currentIndex = chronologicalEntries.findIndex(
-              (item) => item.id === entry.id
-            );
-
-            const previousEntry =
-              currentIndex > 0 ? chronologicalEntries[currentIndex - 1] : undefined;
-
+            const previousEntry = previousById.get(entry.id);
             const consumption = calculateConsumption(entry, previousEntry);
             const costPerKm = calculateCostPerKm(entry, previousEntry);
 
             return (
               <article
                 key={entry.id}
-                className="animate-slide-up rounded-[2.2rem] border border-white/50 bg-white/70 p-5 shadow-[var(--surface-shadow)] backdrop-blur-md"
+                className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">{entry.date}</p>
-                    <h2 className="mt-1 text-3xl font-black tracking-tight text-[var(--foreground)]">
+                    <p className="text-sm text-[var(--muted)]">{entry.date}</p>
+                    <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
                       {entry.total_cost.toFixed(2)}€
                     </h2>
                   </div>
 
-                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--accent-strong)] shadow-sm">
+                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
                     {entry.price_per_liter.toFixed(3)}€/L
                   </span>
                 </div>
 
-                <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-sm text-[var(--muted)]">
+                    {entry.station || "Χωρίς πρατήριο"}
+                  </p>
                   <DeleteEntryButton
                     entryId={entry.id}
                     endpoint="/api/fuel"
@@ -94,27 +114,25 @@ async function FuelContent() {
                   />
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-3">
-                  <div className="rounded-[1.2rem] bg-white/40 border border-white/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-[1.35rem] bg-white/70 p-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                       Km
                     </p>
-                    <p className="mt-1 text-sm font-bold text-[var(--foreground)]">
+                    <p className="mt-1 font-semibold text-[var(--foreground)]">
                       {entry.odometer.toLocaleString("el-GR")}
                     </p>
                   </div>
-
-                  <div className="rounded-[1.2rem] bg-white/40 border border-white/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
+                  <div className="rounded-[1.35rem] bg-white/70 p-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                       Λίτρα
                     </p>
                     <p className="mt-1 font-semibold text-[var(--foreground)]">
                       {entry.liters.toFixed(2)}
                     </p>
                   </div>
-
-                  <div className="rounded-[1.2rem] bg-[var(--accent-soft)]/40 border border-[var(--accent-soft)]/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-strong)]/70">
+                  <div className="rounded-[1.35rem] bg-[var(--accent-soft)]/50 p-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--accent-strong)]">
                       L/100km
                     </p>
                     <p className="mt-1 font-semibold text-[var(--foreground)]">
@@ -123,34 +141,31 @@ async function FuelContent() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[var(--muted)]">
-                  <span>{entry.station || "Χωρίς πρατήριο"}</span>
-                  <div className="flex items-center gap-3">
-                    {entry.receipt_url ? (
-                      <a
-                        href={entry.receipt_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-[var(--accent-strong)] underline decoration-[color:var(--accent-strong)] underline-offset-2"
-                      >
-                        Απόδειξη
-                      </a>
-                    ) : null}
-                    <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
-                  </div>
+                <div className="mt-4 flex items-center justify-end gap-3 text-sm text-[var(--muted)]">
+                  {entry.receipt_url ? (
+                    <a
+                      href={entry.receipt_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-[var(--accent-strong)]"
+                    >
+                      Απόδειξη
+                    </a>
+                  ) : null}
+                  <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
                 </div>
               </article>
             );
           })
         )}
-      </div>
-    </main>
+      </section>
+    </PageMain>
   );
 }
 
 export default function FuelPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <FuelContent />
     </Suspense>
   );

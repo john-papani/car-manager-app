@@ -60,29 +60,28 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             Car Manager
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
-            Sign in
+            Σύνδεση
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Use the demo account for quick access, or sign in with Google for Drive sync
-            and receipt uploads.
+            Demo για γρήγορη δοκιμή, ή Google για Drive και αποδείξεις.
           </p>
         </div>
 
         {params.error ? (
           <div className="relative mt-5 rounded-[1.25rem] border border-[rgb(202_111_61_/_0.24)] bg-[rgb(202_111_61_/_0.08)] px-4 py-3 text-sm text-[var(--foreground)]">
             {params.error === "credentials"
-              ? "Wrong username or password. Try user / user."
-              : "Sign-in did not complete. Please try again."}
+              ? "Λάθος username ή password. Δοκίμασε user / user."
+              : "Η σύνδεση δεν ολοκληρώθηκε. Δοκίμασε ξανά."}
           </div>
         ) : null}
 
         <div className="relative mt-6 rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-4">
           <div>
             <h2 className="text-base font-semibold text-[var(--foreground)]">
-              Demo account
+              Demo λογαριασμός
             </h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-              Username: `user` and password: `user`.
+              Username: <strong>user</strong> · Password: <strong>user</strong>
             </p>
           </div>
 
@@ -139,10 +138,10 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             </div>
 
             <AuthSubmitButton
-              pendingLabel="Signing in..."
-              className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgb(18_49_59_/_0.06)] transition hover:bg-[rgb(255_251_246_/_0.95)]"
+              pendingLabel="Σύνδεση..."
+              className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3.5 text-sm font-semibold text-[var(--foreground)] shadow-[0_10px_24px_rgb(18_49_59_/_0.06)] transition hover:bg-[rgb(255_251_246_/_0.95)]"
             >
-              Sign in with username
+              Σύνδεση με demo
             </AuthSubmitButton>
           </form>
         </div>
@@ -154,10 +153,10 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             </div>
             <div>
               <h2 className="text-base font-semibold text-[var(--foreground)]">
-                Google account
+                Google λογαριασμός
               </h2>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                Grants access for profile, email, and storing files in Google Drive.
+                Για αποθήκευση αποδείξεων στο Google Drive.
               </p>
             </div>
           </div>
@@ -170,11 +169,11 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             className="mt-5"
           >
             <AuthSubmitButton
-              pendingLabel="Redirecting..."
-              className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[var(--navy)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgb(18_49_59_/_0.16)] transition hover:bg-[rgb(18_49_59_/_0.94)]"
+              pendingLabel="Μετάβαση..."
+              className="flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[var(--navy)] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_16px_32px_rgb(18_49_59_/_0.16)] transition hover:bg-[rgb(18_49_59_/_0.94)]"
             >
               <GoogleIcon />
-              Continue with Google
+              Συνέχεια με Google
             </AuthSubmitButton>
           </form>
         </div>

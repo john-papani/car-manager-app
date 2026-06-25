@@ -87,7 +87,7 @@ export default function VehicleProfileForm({
           </p>
         </div>
         <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-          Vehicle
+          Όχημα
         </span>
       </div>
 
@@ -235,11 +235,11 @@ export default function VehicleProfileForm({
         </p>
       ) : null}
 
-      <div className="mt-5 flex justify-end">
+      <div className="mt-5">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-w-40 items-center justify-center rounded-full border border-[rgb(18_49_59_/_0.14)] bg-[rgb(255_251_246_/_0.96)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_14px_30px_rgb(18_49_59_/_0.12),inset_0_1px_0_rgb(255_255_255_/_0.72)] transition hover:border-[rgb(18_49_59_/_0.2)] hover:bg-white hover:shadow-[0_18px_34px_rgb(18_49_59_/_0.14),inset_0_1px_0_rgb(255_255_255_/_0.8)] disabled:cursor-not-allowed disabled:opacity-55"
+          className="inline-flex w-full items-center justify-center rounded-[1.15rem] bg-[var(--navy)] px-5 py-4 text-sm font-semibold text-white shadow-[0_18px_34px_rgb(18_49_59_/_0.2)] transition hover:bg-[rgb(16_43_52_/_0.96)] disabled:cursor-not-allowed disabled:opacity-55"
         >
           {isSubmitting ? "Αποθήκευση..." : "Αποθήκευση στοιχείων"}
         </button>

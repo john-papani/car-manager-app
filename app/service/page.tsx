@@ -1,7 +1,11 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { auth } from "@/auth";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
+import EmptyState from "@/components/EmptyState";
+import MiniStat from "@/components/MiniStat";
+import PageHeader from "@/components/PageHeader";
+import PageMain from "@/components/PageMain";
+import PageSkeleton from "@/components/PageSkeleton";
 import { getCurrentServiceEntries } from "@/lib/current-user-data";
 import type { ServiceEntry } from "@/types/car";
 
@@ -24,54 +28,25 @@ async function ServiceContent() {
     .sort(
       (a, b) =>
         (a.next_service_odometer ?? Number.MAX_SAFE_INTEGER) -
-        (b.next_service_odometer ?? Number.MAX_SAFE_INTEGER)
+        (b.next_service_odometer ?? Number.MAX_SAFE_INTEGER),
     )[0];
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-md px-4 py-5 pb-32">
-      <section className="rounded-[1.9rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_48%,#ca6f3d_155%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.2)]">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/62">
-              Συντήρηση
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Service
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-white/72">
-              Ιστορικό εργασιών, χιλιόμετρα και υπενθυμίσεις για το επόμενο
-              service.
-            </p>
-          </div>
+    <PageMain>
+      <PageHeader
+        eyebrow="Συντήρηση"
+        title="Service"
+        description="Ιστορικό εργασιών, κόστη και υπενθύμιση για το επόμενο service."
+        actionHref="/service/new"
+        actionLabel="+ Νέο"
+      />
 
-          <Link
-            href="/service/new"
-            className="rounded-full bg-white px-4 py-2.5 text-sm font-semibold !text-[var(--navy)] shadow-[0_14px_28px_rgb(255_255_255_/_0.18)]"
-          >
-            + Νέο
-          </Link>
-        </div>
-      </section>
-
-      <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Εργασίες
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-            {entries.length}
-          </p>
-        </div>
-
-        <div className="rounded-[1.6rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Σύνολο
-          </p>
-          <p className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
-            {totalCost.toFixed(2)}€
-          </p>
-        </div>
-      </section>
+      {entries.length > 0 ? (
+        <section className="mt-5 grid grid-cols-2 gap-3">
+          <MiniStat label="Εργασίες" value={String(entries.length)} />
+          <MiniStat label="Σύνολο" value={`${totalCost.toFixed(2)}€`} />
+        </section>
+      ) : null}
 
       {upcomingEntry ? (
         <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
@@ -82,9 +57,9 @@ async function ServiceContent() {
             {(upcomingEntry.next_service_odometer ?? 0).toLocaleString("el-GR")} km
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Από την εργασία &quot;{upcomingEntry.service_type}&quot;
+            Από «{upcomingEntry.service_type}»
             {latestEntry
-              ? ` · τώρα είσαι στα ${latestEntry.odometer.toLocaleString("el-GR")} km`
+              ? ` · τώρα στα ${latestEntry.odometer.toLocaleString("el-GR")} km`
               : ""}
           </p>
         </section>
@@ -92,15 +67,12 @@ async function ServiceContent() {
 
       <section className="mt-5 space-y-3">
         {entries.length === 0 ? (
-          <div className="rounded-[1.9rem] border border-dashed border-[var(--line)] bg-[var(--card)] p-6 text-center shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
-            <p className="font-semibold text-[var(--foreground)]">
-              Δεν υπάρχουν ακόμα καταχωρήσεις service.
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-              Πρόσθεσε την πρώτη εργασία για να κρατάς οργανωμένο ιστορικό
-              συντήρησης.
-            </p>
-          </div>
+          <EmptyState
+            title="Δεν υπάρχουν εργασίες service"
+            description="Κατέγραψε την πρώτη για να κρατάς οργανωμένο το ιστορικό συντήρησης."
+            actionHref="/service/new"
+            actionLabel="Πρώτη εργασία"
+          />
         ) : (
           entries.map((entry) => (
             <article
@@ -114,7 +86,6 @@ async function ServiceContent() {
                     {entry.service_type}
                   </h2>
                 </div>
-
                 <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
                   {entry.total_cost.toFixed(2)}€
                 </span>
@@ -137,7 +108,6 @@ async function ServiceContent() {
                     {entry.odometer.toLocaleString("el-GR")}
                   </p>
                 </div>
-
                 <div className="rounded-[1.35rem] bg-white/70 p-3">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                     Επόμενο
@@ -158,13 +128,13 @@ async function ServiceContent() {
           ))
         )}
       </section>
-    </main>
+    </PageMain>
   );
 }
 
 export default function ServicePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton />}>
       <ServiceContent />
     </Suspense>
   );

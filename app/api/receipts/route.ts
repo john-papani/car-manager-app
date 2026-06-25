@@ -76,22 +76,6 @@ export async function POST(request: NextRequest) {
     }
 
     const driveClient = getUserDriveClient(session.accessToken);
-    const folderMetadata = await driveClient.files.get({
-      fileId: folderId,
-      fields: "id, name, mimeType, webViewLink",
-      supportsAllDrives: true,
-    });
-
-    if (folderMetadata.data.mimeType !== "application/vnd.google-apps.folder") {
-      return NextResponse.json(
-        {
-          message:
-            "Το GOOGLE_DRIVE_RECEIPTS_FOLDER_ID πρέπει να δείχνει σε φάκελο του Google Drive.",
-        },
-        { status: 400 }
-      );
-    }
-
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const response = await driveClient.files.create({

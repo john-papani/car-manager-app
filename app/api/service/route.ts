@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     ]);
     revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
     revalidatePath("/service");
+    revalidatePath("/");
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {

@@ -104,9 +104,15 @@ function normalizeSchemaRow(row: string[], headers: string[]) {
   }, {});
 }
 
+const verifiedSheets = new Set<string>();
+
 async function ensureSheetHeaders(sheetName: string) {
   if (!spreadsheetId) {
     throw new Error("Missing GOOGLE_SHEET_ID");
+  }
+
+  if (verifiedSheets.has(sheetName)) {
+    return;
   }
 
   const sheetsClient = getSheetsClient();
@@ -162,6 +168,8 @@ async function ensureSheetHeaders(sheetName: string) {
       },
     });
   }
+
+  verifiedSheets.add(sheetName);
 }
 
 export async function appendRow(sheetName: string, values: unknown[]) {

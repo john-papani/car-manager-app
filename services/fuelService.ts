@@ -38,6 +38,31 @@ export async function createFuelEntry(input: CreateFuelEntryInput) {
     );
   }
 
+  return response.json() as Promise<{ entry: FuelEntry }>;
+}
+
+export async function attachFuelReceipt(
+  entryId: string,
+  receipt: { file_id?: string; url?: string },
+) {
+  const response = await fetch("/api/fuel", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: entryId,
+      receipt_file_id: receipt.file_id,
+      receipt_url: receipt.url,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getResponseMessage(response, "Failed to attach fuel receipt"),
+    );
+  }
+
   return response.json();
 }
 

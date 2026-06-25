@@ -1,17 +1,17 @@
 import { Suspense } from "react";
 import FuelEntryForm from "@/components/FuelEntryForm";
 import EntryPageHeader from "@/components/EntryPageHeader";
+import PageMain from "@/components/PageMain";
 
 export default function NewFuelEntryPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md px-4 py-5 pb-12">
+    <PageMain compact>
       <EntryPageHeader
         eyebrow="Καύσιμα"
         title="Νέο γέμισμα"
-        description="Πέρασε το γέμισμα σε λίγα δευτερόλεπτα και κράτα το ιστορικό σου καθαρό, έτοιμο για στατιστικά."
+        description="Συμπλήρωσε ημερομηνία, χιλιόμετρα, λίτρα και κόστος."
         backHref="/fuel"
         backLabel="Ιστορικό"
-        accentLabel="Quick entry"
       />
 
       <div className="mt-5">
@@ -19,6 +19,6 @@ export default function NewFuelEntryPage() {
           <FuelEntryForm />
         </Suspense>
       </div>
-    </main>
+    </PageMain>
   );
 }

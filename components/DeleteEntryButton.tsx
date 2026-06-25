@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useToast } from "@/components/AppProviders";
 
 type DeleteEntryButtonProps = {
   entryId: string;
@@ -13,10 +14,11 @@ type DeleteEntryButtonProps = {
 export default function DeleteEntryButton({
   entryId,
   endpoint,
-  label = "Delete",
+  label = "Διαγραφή",
   confirmMessage,
 }: DeleteEntryButtonProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -48,12 +50,12 @@ export default function DeleteEntryButton({
       startTransition(() => {
         router.refresh();
       });
+      showToast("Η καταχώρηση διαγράφηκε.", "success");
     } catch (error) {
       console.error(error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Delete failed.",
+      showToast(
+        error instanceof Error ? error.message : "Η διαγραφή απέτυχε.",
+        "error",
       );
       setIsDeleting(false);
     }
@@ -68,7 +70,7 @@ export default function DeleteEntryButton({
       disabled={disabled}
       className="inline-flex items-center justify-center rounded-full border border-[rgb(173_84_37_/_0.12)] bg-[rgb(255_251_246_/_0.88)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] transition hover:border-[rgb(173_84_37_/_0.22)] hover:bg-white disabled:cursor-not-allowed disabled:opacity-55"
     >
-      {disabled ? "Deleting..." : label}
+      {disabled ? "Διαγραφή..." : label}
     </button>
   );
 }

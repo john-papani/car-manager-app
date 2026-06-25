@@ -96,6 +96,16 @@ button:focus-visible {
   @apply backdrop-blur-xl bg-white/75 border border-white/50 shadow-[var(--surface-shadow)];
 }
 
+@keyframes navProgress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

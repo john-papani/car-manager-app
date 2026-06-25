@@ -131,6 +131,7 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 aria-label={item.label}
                 className={`rounded-[1.1rem] px-1.5 py-2 text-center transition ${
                   isActive
