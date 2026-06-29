@@ -1,4 +1,5 @@
 import type { CreateFuelEntryInput, FuelEntry, UpdateFuelEntryInput } from "@/types/car";
+import { createWithOfflineQueue } from "@/lib/offline-create";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -23,22 +24,19 @@ export async function getFuelEntries(): Promise<FuelEntry[]> {
   return data.entries;
 }
 
-export async function createFuelEntry(input: CreateFuelEntryInput) {
-  const response = await fetch("/api/fuel", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
+export async function createFuelEntry(
+  input: CreateFuelEntryInput,
+  options?: { receiptFile?: File | null },
+) {
+  const result = await createWithOfflineQueue<FuelEntry>({
+    kind: "fuel",
+    endpoint: "/api/fuel",
+    payload: input,
+    receiptFile: options?.receiptFile,
+    fallbackMessage: "Failed to create fuel entry",
   });
 
-  if (!response.ok) {
-    throw new Error(
-      await getResponseMessage(response, "Failed to create fuel entry")
-    );
-  }
-
-  return response.json() as Promise<{ entry: FuelEntry }>;
+  return { entry: result.entry, queued: result.queued };
 }
 
 export async function updateFuelEntry(

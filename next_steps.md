@@ -17,7 +17,7 @@
 
 ### UX & mobile
 
-8. **PWA offline** — Έχεις `manifest.json`· service worker για καταχώρηση offline → sync όταν έρθει δίκτυο.
+8. ~~**PWA offline**~~ — ✅ Service worker + IndexedDB queue για νέες καταχωρήσεις, auto-sync όταν επανέλθει δίκτυο.
 9. **OCR απόδειξης** — Φωτογραφία → αυτόματη συμπλήρωση λίτρων/ποσού (Google Vision ή παρόμοιο).
 10. **Widget / shortcut** — «+ Γέμισμα» από home screen χωρίς να ανοίγεις την εφαρμογή.
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createExpenseEntry, updateExpenseEntry } from "@/services/expenseService";
 import { useToast } from "@/components/AppProviders";
+import { getOfflineSuccessMessage } from "@/lib/offline-create";
 import FormActionBar from "@/components/FormActionBar";
 import FormShell from "@/components/FormShell";
 import type { ExpenseEntry } from "@/types/car";
@@ -52,15 +53,19 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
 
       if (initialEntry) {
         await updateExpenseEntry({ id: initialEntry.id, ...payload });
+        showToast("Το έξοδο αποθηκεύτηκε.", "success");
       } else {
-        await createExpenseEntry(payload);
+        const { queued } = await createExpenseEntry(payload);
+        showToast(
+          getOfflineSuccessMessage(queued, "Το έξοδο αποθηκεύτηκε."),
+          queued ? "info" : "success",
+        );
       }
 
       startTransition(() => {
         router.replace("/expenses");
         router.refresh();
       });
-      showToast("Το έξοδο αποθηκεύτηκε.", "success");
     } catch (error) {
       console.error(error);
       setSubmitError("Η αποθήκευση του εξόδου δεν ολοκληρώθηκε.");

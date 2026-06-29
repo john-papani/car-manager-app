@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceEntry, updateServiceEntry } from "@/services/serviceService";
 import { useToast } from "@/components/AppProviders";
+import { getOfflineSuccessMessage } from "@/lib/offline-create";
 import FormActionBar from "@/components/FormActionBar";
 import FormShell from "@/components/FormShell";
 import type { ServiceEntry } from "@/types/car";
@@ -58,15 +59,19 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
 
       if (initialEntry) {
         await updateServiceEntry({ id: initialEntry.id, ...payload });
+        showToast("Το service αποθηκεύτηκε.", "success");
       } else {
-        await createServiceEntry(payload);
+        const { queued } = await createServiceEntry(payload);
+        showToast(
+          getOfflineSuccessMessage(queued, "Το service αποθηκεύτηκε."),
+          queued ? "info" : "success",
+        );
       }
 
       startTransition(() => {
         router.replace("/service");
         router.refresh();
       });
-      showToast("Το service αποθηκεύτηκε.", "success");
     } catch (error) {
       console.error(error);
       setSubmitError("Η αποθήκευση του service δεν ολοκληρώθηκε.");

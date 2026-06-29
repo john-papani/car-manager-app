@@ -2,7 +2,9 @@
   "name": "Car Manager",
   "short_name": "Car",
   "description": "Personal car fuel and service tracker",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#fafafa",
   "theme_color": "#12313b",
@@ -18,7 +20,7 @@
       "src": "/car-icon.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

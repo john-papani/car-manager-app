@@ -1,4 +1,5 @@
 import type { CreateServiceEntryInput, ServiceEntry, UpdateServiceEntryInput } from "@/types/car";
+import { createWithOfflineQueue } from "@/lib/offline-create";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -24,21 +25,14 @@ export async function getServiceEntries(): Promise<ServiceEntry[]> {
 }
 
 export async function createServiceEntry(input: CreateServiceEntryInput) {
-  const response = await fetch("/api/service", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
+  const result = await createWithOfflineQueue<ServiceEntry>({
+    kind: "service",
+    endpoint: "/api/service",
+    payload: input,
+    fallbackMessage: "Failed to create service entry",
   });
 
-  if (!response.ok) {
-    throw new Error(
-      await getResponseMessage(response, "Failed to create service entry"),
-    );
-  }
-
-  return response.json();
+  return { entry: result.entry, queued: result.queued };
 }
 
 export async function updateServiceEntry(input: UpdateServiceEntryInput) {

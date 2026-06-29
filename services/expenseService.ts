@@ -1,4 +1,5 @@
 import type { CreateExpenseEntryInput, ExpenseEntry, UpdateExpenseEntryInput } from "@/types/car";
+import { createWithOfflineQueue } from "@/lib/offline-create";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -24,21 +25,14 @@ export async function getExpenseEntries(): Promise<ExpenseEntry[]> {
 }
 
 export async function createExpenseEntry(input: CreateExpenseEntryInput) {
-  const response = await fetch("/api/expenses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
+  const result = await createWithOfflineQueue<ExpenseEntry>({
+    kind: "expense",
+    endpoint: "/api/expenses",
+    payload: input,
+    fallbackMessage: "Failed to create expense entry",
   });
 
-  if (!response.ok) {
-    throw new Error(
-      await getResponseMessage(response, "Failed to create expense entry"),
-    );
-  }
-
-  return response.json();
+  return { entry: result.entry, queued: result.queued };
 }
 
 export async function updateExpenseEntry(input: UpdateExpenseEntryInput) {

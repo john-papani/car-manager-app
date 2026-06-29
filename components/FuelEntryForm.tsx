@@ -8,6 +8,8 @@ import {
   updateFuelEntry,
   uploadFuelReceipt,
 } from "@/services/fuelService";
+import { useToast } from "@/components/AppProviders";
+import { getOfflineSuccessMessage } from "@/lib/offline-create";
 import { compressReceiptImage } from "@/lib/compress-image";
 import {
   notifyFuelReceiptAttached,
@@ -27,6 +29,7 @@ type FuelEntryFormProps = {
 
 export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
@@ -107,22 +110,36 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
         notes: form.notes,
       };
 
-      const { entry } = initialEntry
-        ? await updateFuelEntry({ id: initialEntry.id, ...payload })
-        : await createFuelEntry(payload);
+      const createResult = initialEntry
+        ? {
+            entry: (
+              await updateFuelEntry({ id: initialEntry.id, ...payload })
+            ).entry,
+            queued: false,
+          }
+        : await createFuelEntry(payload, { receiptFile: receiptToUpload });
 
-      setFuelSaveFeedback({
-        entryId: entry.id,
-        pendingReceipt: Boolean(receiptToUpload),
-        savedAt: Date.now(),
-      });
+      const { entry, queued } = createResult;
+
+      if (!queued) {
+        setFuelSaveFeedback({
+          entryId: entry.id,
+          pendingReceipt: Boolean(receiptToUpload),
+          savedAt: Date.now(),
+        });
+      }
+
+      showToast(
+        getOfflineSuccessMessage(queued, "Το γέμισμα αποθηκεύτηκε."),
+        queued ? "info" : "success",
+      );
 
       startTransition(() => {
         router.replace("/fuel");
         router.refresh();
       });
 
-      if (receiptToUpload && !initialEntry) {
+      if (receiptToUpload && !initialEntry && !queued) {
         void (async () => {
           try {
             const compressed = await compressReceiptImage(receiptToUpload);
