@@ -109,7 +109,7 @@ function NavIcon({ children }: { children: React.ReactNode }) {
 export default function BottomNav({ userEmail, userName }: BottomNavProps) {
   const pathname = usePathname();
 
-  if (pathname === "/login" || pathname.endsWith("/new")) {
+  if (pathname === "/login" || pathname.endsWith("/new") || pathname.endsWith("/edit")) {
     return null;
   }
 

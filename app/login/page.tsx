@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/auth";
 import AuthSubmitButton from "@/components/AuthSubmitButton";
+import { isDemoLoginEnabled } from "@/lib/demo-mode";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -44,6 +45,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
 async function LoginContent({ searchParams }: LoginPageProps) {
   const session = await auth();
   const params = await searchParams;
+  const demoEnabled = isDemoLoginEnabled();
 
   if (session?.user) {
     redirect("/");
@@ -63,7 +65,9 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             Σύνδεση
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Demo για γρήγορη δοκιμή, ή Google για Drive και αποδείξεις.
+            {demoEnabled
+              ? "Demo για γρήγορη δοκιμή, ή Google για Drive και αποδείξεις."
+              : "Συνέχισε με Google για Drive και αποδείξεις."}
           </p>
         </div>
 
@@ -75,6 +79,7 @@ async function LoginContent({ searchParams }: LoginPageProps) {
           </div>
         ) : null}
 
+        {demoEnabled ? (
         <div className="relative mt-6 rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-4">
           <div>
             <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -145,8 +150,9 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             </AuthSubmitButton>
           </form>
         </div>
+        ) : null}
 
-        <div className="relative mt-4 rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-4">
+        <div className={`relative rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-4 ${demoEnabled ? "mt-4" : "mt-6"}`}>
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--navy)] text-white">
               <GoogleIcon />

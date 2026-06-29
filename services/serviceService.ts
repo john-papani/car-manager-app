@@ -1,4 +1,4 @@
-import type { CreateServiceEntryInput, ServiceEntry } from "@/types/car";
+import type { CreateServiceEntryInput, ServiceEntry, UpdateServiceEntryInput } from "@/types/car";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -35,6 +35,24 @@ export async function createServiceEntry(input: CreateServiceEntryInput) {
   if (!response.ok) {
     throw new Error(
       await getResponseMessage(response, "Failed to create service entry"),
+    );
+  }
+
+  return response.json();
+}
+
+export async function updateServiceEntry(input: UpdateServiceEntryInput) {
+  const response = await fetch("/api/service", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getResponseMessage(response, "Failed to update service entry"),
     );
   }
 

@@ -3,8 +3,8 @@ import "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
-    accessToken?: string;
     error?: string;
+    provider?: "google" | "credentials";
     user?: {
       id?: string;
       name?: string | null;
@@ -20,5 +20,6 @@ declare module "next-auth/jwt" {
     refreshToken?: string;
     expiresAt?: number;
     error?: string;
+    provider?: "google" | "credentials";
   }
 }

@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -136,7 +137,9 @@ export default function AppProviders({
 
   return (
     <ToastContext.Provider value={value}>
-      <NavigationProgress />
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
       {children}
     </ToastContext.Provider>

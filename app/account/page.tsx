@@ -16,7 +16,8 @@ async function AccountContent() {
     redirect("/login");
   }
 
-  const isGoogleAccount = Boolean(session.accessToken) && !session.error;
+  const isGoogleAccount =
+    session.provider === "google" && session.error !== "RefreshAccessTokenError";
   const isDemoAccount = isDemoSession(session);
   let profile = null;
 

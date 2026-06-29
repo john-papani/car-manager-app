@@ -3,30 +3,47 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useToast } from "@/components/AppProviders";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type DeleteEntryButtonProps = {
   entryId: string;
   endpoint: string;
-  label?: string;
   confirmMessage: string;
 };
+
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
+}
 
 export default function DeleteEntryButton({
   entryId,
   endpoint,
-  label = "Διαγραφή",
   confirmMessage,
 }: DeleteEntryButtonProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   async function handleDelete() {
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
     setIsDeleting(true);
 
     try {
@@ -47,6 +64,7 @@ export default function DeleteEntryButton({
         throw new Error(message);
       }
 
+      setDialogOpen(false);
       startTransition(() => {
         router.refresh();
       });
@@ -64,13 +82,29 @@ export default function DeleteEntryButton({
   const disabled = isDeleting || isPending;
 
   return (
-    <button
-      type="button"
-      onClick={handleDelete}
-      disabled={disabled}
-      className="inline-flex items-center justify-center rounded-full border border-[rgb(173_84_37_/_0.12)] bg-[rgb(255_251_246_/_0.88)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)] transition hover:border-[rgb(173_84_37_/_0.22)] hover:bg-white disabled:cursor-not-allowed disabled:opacity-55"
-    >
-      {disabled ? "Διαγραφή..." : label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setDialogOpen(true)}
+        disabled={disabled}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+        aria-label={disabled ? "Διαγραφή..." : "Διαγραφή"}
+      >
+        <TrashIcon />
+      </button>
+
+      <ConfirmDialog
+        open={dialogOpen}
+        title="Επιβεβαίωση διαγραφής"
+        message={confirmMessage}
+        isPending={disabled}
+        onCancel={() => {
+          if (!disabled) {
+            setDialogOpen(false);
+          }
+        }}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

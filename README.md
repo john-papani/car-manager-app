@@ -126,6 +126,9 @@ GOOGLE_CALENDAR_ID="your_calendar_id"
 AUTH_GOOGLE_ID="your_google_oauth_client_id"
 AUTH_GOOGLE_SECRET="your_google_oauth_client_secret"
 AUTH_SECRET="your_auth_secret"
+
+# Demo login (enabled in development by default; set to "true" to force on, "false" to force off)
+ENABLE_DEMO_LOGIN="true"
 ```
 
 ### 3. Run the development server
@@ -189,6 +192,7 @@ npm run dev
 npm run build
 npm run start
 npm run lint
+npm run test
 ```
 
 ## Project Structure

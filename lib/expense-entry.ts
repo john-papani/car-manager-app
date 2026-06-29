@@ -1,27 +1,16 @@
 import type { ExpenseEntry } from "@/types/car";
-
-function parseSheetNumber(value: string) {
-  const normalizedValue = String(value ?? "").trim().replace(",", ".");
-
-  if (!normalizedValue) {
-    return 0;
-  }
-
-  const parsedValue = Number(normalizedValue);
-
-  return Number.isFinite(parsedValue) ? parsedValue : 0;
-}
+import { parseSheetNumberOrZero } from "@/lib/sheet-parse";
 
 export function mapRowToExpenseEntry(
-  row: Record<string, string>
+  row: Record<string, string>,
 ): ExpenseEntry {
-  const odometer = parseSheetNumber(row.odometer);
+  const odometer = parseSheetNumberOrZero(row.odometer);
 
   return {
     id: row.id,
     date: row.date,
     category: row.category,
-    total_cost: parseSheetNumber(row.total_cost),
+    total_cost: parseSheetNumberOrZero(row.total_cost),
     odometer: odometer || undefined,
     vendor: row.vendor,
     notes: row.notes,
@@ -38,4 +27,18 @@ export function isExpenseEntryValid(entry: ExpenseEntry) {
     Number.isFinite(entry.total_cost) &&
     entry.total_cost >= 0
   );
+}
+
+export function expenseEntryToRowValues(entry: ExpenseEntry) {
+  return [
+    entry.id,
+    entry.date,
+    entry.category,
+    entry.total_cost,
+    entry.odometer ?? "",
+    entry.vendor || "",
+    entry.notes || "",
+    entry.created_at,
+    entry.updated_at,
+  ];
 }

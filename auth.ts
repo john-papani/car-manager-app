@@ -1,7 +1,8 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
+import { isDemoLoginEnabled } from "@/lib/demo-mode";
 
 type GoogleTokenResponse = {
   access_token: string;
@@ -55,15 +56,21 @@ async function refreshGoogleAccessToken(token: JWT): Promise<JWT> {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: {
-    strategy: "jwt",
-    maxAge: 60 * 60 * 24 * 90, // 90 days
-  },
-  jwt: {
-    maxAge: 60 * 60 * 24 * 90, // 90 days
-  },
-  providers: [
+const providers: NextAuthConfig["providers"] = [
+  Google({
+    authorization: {
+      params: {
+        access_type: "offline",
+        prompt: "consent",
+        response_type: "code",
+        scope: "openid email profile https://www.googleapis.com/auth/drive",
+      },
+    },
+  }),
+];
+
+if (isDemoLoginEnabled()) {
+  providers.unshift(
     Credentials({
       name: "Demo Login",
       credentials: {
@@ -85,18 +92,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    Google({
-      authorization: {
-        params: {
-          access_type: "offline",
-          prompt: "consent",
-          response_type: "code",
-          scope:
-            "openid email profile https://www.googleapis.com/auth/drive",
-        },
-      },
-    }),
-  ],
+  );
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 90,
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 * 90,
+  },
+  providers,
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
@@ -109,9 +116,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === "google") {
         return {
           ...token,
+          provider: "google",
           accessToken: account.access_token,
           expiresAt: account.expires_at,
           refreshToken: account.refresh_token ?? token.refreshToken,
+          error: undefined,
+        };
+      }
+
+      if (account?.provider === "credentials") {
+        return {
+          ...token,
+          provider: "credentials",
+          accessToken: undefined,
+          refreshToken: undefined,
+          expiresAt: undefined,
           error: undefined,
         };
       }
@@ -123,8 +142,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return refreshGoogleAccessToken(token);
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
       session.error = token.error;
+      session.provider =
+        token.provider === "google" || token.provider === "credentials"
+          ? token.provider
+          : undefined;
 
       if (session.user && token.sub) {
         session.user.id = token.sub;

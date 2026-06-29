@@ -5,7 +5,7 @@ export async function createFuelCalendarEvent(entry: FuelEntry) {
   const calendarId = process.env.GOOGLE_CALENDAR_ID;
 
   if (!calendarId) {
-    throw new Error("Missing GOOGLE_CALENDAR_ID");
+    return null;
   }
 
   const calendar = getCalendarClient();
@@ -25,7 +25,7 @@ export async function createFuelCalendarEvent(entry: FuelEntry) {
     .filter(Boolean)
     .join("\n");
 
-  await calendar.events.insert({
+  const response = await calendar.events.insert({
     calendarId,
     requestBody: {
       summary: title,
@@ -39,6 +39,8 @@ export async function createFuelCalendarEvent(entry: FuelEntry) {
       },
     },
   });
+
+  return response.data.id ?? null;
 }
 
 export async function deleteCalendarEvent(eventId: string) {

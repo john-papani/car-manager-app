@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import {
+  getGoogleAccessToken,
+  hasGoogleDriveAccess,
+} from "@/lib/auth-server";
 import { isDemoSession } from "@/lib/demo-mode";
+import { requireSession } from "@/lib/require-session";
 import { getUserDriveClient } from "@/lib/google";
 
 function getErrorMessage(error: unknown) {
@@ -31,7 +35,13 @@ function getErrorStatus(error: unknown) {
 
 export async function GET() {
   const folderId = process.env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID;
-  const session = await auth();
+  const authResult = await requireSession();
+
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  const session = authResult.session;
 
   if (!folderId) {
     return NextResponse.json(
@@ -39,7 +49,7 @@ export async function GET() {
         ok: false,
         message: "Missing GOOGLE_DRIVE_RECEIPTS_FOLDER_ID",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -60,25 +70,28 @@ export async function GET() {
     );
   }
 
-  if (!session?.user?.email || !session.accessToken) {
+  const accessToken = await getGoogleAccessToken();
+  const driveReady = await hasGoogleDriveAccess();
+
+  if (!session.user?.email || !accessToken || !driveReady) {
     return NextResponse.json(
       {
         ok: false,
         folder_id: folderId,
         checks: {
-          signedIn: false,
-          hasAccessToken: false,
+          signedIn: Boolean(session.user),
+          hasAccessToken: Boolean(accessToken),
           folderVisibleToSignedInUser: false,
         },
         message:
           "Δεν υπάρχει ενεργή Google σύνδεση. Κάνε sign in πρώτα από το app.",
       },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
   try {
-    const driveClient = getUserDriveClient(session.accessToken);
+    const driveClient = getUserDriveClient(accessToken);
     const folder = await driveClient.files.get({
       fileId: folderId,
       fields: "id, name, mimeType, driveId, parents, webViewLink",
@@ -120,7 +133,7 @@ export async function GET() {
         },
         message,
       },
-      { status }
+      { status },
     );
   }
 }

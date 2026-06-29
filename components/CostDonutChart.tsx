@@ -70,7 +70,11 @@ export default function CostDonutChart({
   }, []);
 
   return (
-    <div className="flex items-center gap-4 rounded-[1.6rem] bg-white/50 p-4">
+    <div
+      className="flex items-center gap-4 rounded-[1.6rem] bg-white/50 p-4"
+      role="img"
+      aria-label="Γράφημα κατανομής κόστους"
+    >
       <div className="relative h-36 w-36 shrink-0">
         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
           <circle
@@ -125,6 +129,24 @@ export default function CostDonutChart({
           );
         })}
       </div>
+
+      <table className="sr-only">
+        <caption>Κατανομή κόστους</caption>
+        <thead>
+          <tr>
+            <th>Κατηγορία</th>
+            <th>Ποσό</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredSegments.map((segment) => (
+            <tr key={segment.label}>
+              <td>{segment.label}</td>
+              <td>{segment.value.toFixed(2)}€</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

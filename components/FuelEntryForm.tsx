@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   attachFuelReceipt,
   createFuelEntry,
+  updateFuelEntry,
   uploadFuelReceipt,
 } from "@/services/fuelService";
 import { compressReceiptImage } from "@/lib/compress-image";
@@ -18,19 +19,24 @@ import FormShell, {
   formLabelClass,
   formSectionClass,
 } from "@/components/FormShell";
+import type { FuelEntry } from "@/types/car";
 
-export default function FuelEntryForm() {
+type FuelEntryFormProps = {
+  initialEntry?: FuelEntry;
+};
+
+export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    odometer: "",
-    liters: "",
-    total_cost: "",
-    station: "",
-    is_full_tank: true,
-    notes: "",
+    date: initialEntry?.date ?? new Date().toISOString().slice(0, 10),
+    odometer: initialEntry ? String(initialEntry.odometer) : "",
+    liters: initialEntry ? String(initialEntry.liters) : "",
+    total_cost: initialEntry ? String(initialEntry.total_cost) : "",
+    station: initialEntry?.station ?? "",
+    is_full_tank: initialEntry?.is_full_tank ?? true,
+    notes: initialEntry?.notes ?? "",
   });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
@@ -91,7 +97,7 @@ export default function FuelEntryForm() {
     const receiptToUpload = receiptFile;
 
     try {
-      const { entry } = await createFuelEntry({
+      const payload = {
         date: form.date,
         odometer: Number(form.odometer),
         liters,
@@ -99,7 +105,11 @@ export default function FuelEntryForm() {
         station: form.station,
         is_full_tank: form.is_full_tank,
         notes: form.notes,
-      });
+      };
+
+      const { entry } = initialEntry
+        ? await updateFuelEntry({ id: initialEntry.id, ...payload })
+        : await createFuelEntry(payload);
 
       setFuelSaveFeedback({
         entryId: entry.id,
@@ -112,7 +122,7 @@ export default function FuelEntryForm() {
         router.refresh();
       });
 
-      if (receiptToUpload) {
+      if (receiptToUpload && !initialEntry) {
         void (async () => {
           try {
             const compressed = await compressReceiptImage(receiptToUpload);
@@ -279,7 +289,7 @@ export default function FuelEntryForm() {
       <FormActionBar
         disabled={isSubmitting || isPending}
         isSubmitting={isSubmitting || isPending}
-        idleLabel="Αποθήκευση γεμίσματος"
+        idleLabel={initialEntry ? "Αποθήκευση αλλαγών" : "Αποθήκευση γεμίσματος"}
         submittingLabel={isPending ? "Μετάβαση..." : "Αποθήκευση..."}
       />
       </FormShell>

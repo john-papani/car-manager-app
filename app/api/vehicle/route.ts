@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { auth } from "@/auth";
 import { getCurrentVehicleProfile } from "@/lib/current-user-data";
-import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
+import { requireSession, requireWritableSession } from "@/lib/require-session";
 import { getCachedRows, getSheetCacheTag, upsertRowById } from "@/lib/sheets";
 import {
   isVehicleProfileValid,
   mapRowToVehicleProfile,
 } from "@/lib/vehicle-profile";
-import type { UpdateVehicleProfileInput, VehicleProfile } from "@/types/car";
+import {
+  formatZodError,
+  updateVehicleProfileSchema,
+} from "@/lib/validation";
+import type { VehicleProfile } from "@/types/car";
 
 const SHEET_NAME = "vehicle_profile";
 const PROFILE_ID = "vehicle-profile";
 
 export async function GET() {
   try {
-    const profile = await getCurrentVehicleProfile();
+    const authResult = await requireSession();
+
+    if (!authResult.ok) {
+      return authResult.response;
+    }
+
+    const profile = await getCurrentVehicleProfile(authResult.session);
 
     return NextResponse.json({ profile });
   } catch (error) {
@@ -30,24 +39,22 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireWritableSession("save vehicle changes");
 
-    if (isDemoSession(session)) {
-      return NextResponse.json(
-        { message: getDemoReadOnlyMessage("save vehicle changes") },
-        { status: 403 },
-      );
+    if (!authResult.ok) {
+      return authResult.response;
     }
 
-    const body = (await request.json()) as UpdateVehicleProfileInput;
+    const parsed = updateVehicleProfileSchema.safeParse(await request.json());
 
-    if (!body.make?.trim() || !body.model?.trim()) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Make and model are required" },
+        { message: formatZodError(parsed.error) },
         { status: 400 },
       );
     }
 
+    const body = parsed.data;
     const existingRows = await getCachedRows(SHEET_NAME);
     const existingProfile =
       existingRows
@@ -61,10 +68,7 @@ export async function PUT(request: NextRequest) {
       make: body.make.trim(),
       model: body.model.trim(),
       trim: body.trim?.trim() || "",
-      year:
-        body.year && Number.isFinite(Number(body.year))
-          ? Number(body.year)
-          : undefined,
+      year: body.year,
       license_plate: body.license_plate?.trim().toUpperCase() || "",
       fuel_type: body.fuel_type?.trim() || "",
       transmission: body.transmission?.trim() || "",

@@ -10,8 +10,13 @@ export type FuelEntry = {
   notes?: string;
   receipt_file_id?: string;
   receipt_url?: string;
+  calendar_event_id?: string;
   created_at: string;
   updated_at: string;
+};
+
+export type UpdateFuelEntryInput = CreateFuelEntryInput & {
+  id: string;
 };
 
 export type CreateFuelEntryInput = {
@@ -49,6 +54,10 @@ export type CreateServiceEntryInput = {
   notes?: string;
 };
 
+export type UpdateServiceEntryInput = CreateServiceEntryInput & {
+  id: string;
+};
+
 export type ExpenseEntry = {
   id: string;
   date: string;
@@ -68,6 +77,10 @@ export type CreateExpenseEntryInput = {
   odometer?: number;
   vendor?: string;
   notes?: string;
+};
+
+export type UpdateExpenseEntryInput = CreateExpenseEntryInput & {
+  id: string;
 };
 
 export type VehicleProfile = {

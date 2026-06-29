@@ -2,23 +2,28 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createExpenseEntry } from "@/services/expenseService";
+import { createExpenseEntry, updateExpenseEntry } from "@/services/expenseService";
 import { useToast } from "@/components/AppProviders";
 import FormActionBar from "@/components/FormActionBar";
 import FormShell from "@/components/FormShell";
+import type { ExpenseEntry } from "@/types/car";
 
-export default function ExpenseEntryForm() {
+type ExpenseEntryFormProps = {
+  initialEntry?: ExpenseEntry;
+};
+
+export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    category: "",
-    total_cost: "",
-    odometer: "",
-    vendor: "",
-    notes: "",
+    date: initialEntry?.date ?? new Date().toISOString().slice(0, 10),
+    category: initialEntry?.category ?? "",
+    total_cost: initialEntry ? String(initialEntry.total_cost) : "",
+    odometer: initialEntry?.odometer ? String(initialEntry.odometer) : "",
+    vendor: initialEntry?.vendor ?? "",
+    notes: initialEntry?.notes ?? "",
   });
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,14 +41,20 @@ export default function ExpenseEntryForm() {
     setSubmitError("");
 
     try {
-      await createExpenseEntry({
+      const payload = {
         date: form.date,
         category: form.category,
         total_cost: Number(form.total_cost),
         odometer: form.odometer ? Number(form.odometer) : undefined,
         vendor: form.vendor,
         notes: form.notes,
-      });
+      };
+
+      if (initialEntry) {
+        await updateExpenseEntry({ id: initialEntry.id, ...payload });
+      } else {
+        await createExpenseEntry(payload);
+      }
 
       startTransition(() => {
         router.replace("/expenses");
@@ -163,7 +174,7 @@ export default function ExpenseEntryForm() {
       <FormActionBar
         disabled={isSubmitting || isPending}
         isSubmitting={isSubmitting || isPending}
-        idleLabel="Αποθήκευση εξόδου"
+        idleLabel={initialEntry ? "Αποθήκευση αλλαγών" : "Αποθήκευση εξόδου"}
         submittingLabel={isPending ? "Μετάβαση..." : "Αποθήκευση..."}
       />
       </FormShell>

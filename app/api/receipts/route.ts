@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
-import { auth } from "@/auth";
-import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
+import {
+  getGoogleAccessToken,
+  getGoogleAuthError,
+} from "@/lib/auth-server";
+import { requireWritableSession } from "@/lib/require-session";
 import { getUserDriveClient } from "@/lib/google";
+
+const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
 
 function bufferToStream(buffer: Buffer) {
   const readable = new Readable();
@@ -13,39 +18,38 @@ function bufferToStream(buffer: Buffer) {
 
 function getReceiptFileName(file: File) {
   const timestamp = new Date().toISOString().replaceAll(":", "-");
-  return `${timestamp}-${file.name}`;
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return `${timestamp}-${safeName}`;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const authResult = await requireWritableSession("upload receipt images");
 
-    if (isDemoSession(session)) {
-      return NextResponse.json(
-        {
-          message: getDemoReadOnlyMessage("upload receipt images"),
-        },
-        { status: 403 },
-      );
+    if (!authResult.ok) {
+      return authResult.response;
     }
 
-    if (!session?.user?.email || !session.accessToken) {
+    const accessToken = await getGoogleAccessToken();
+    const authError = await getGoogleAuthError();
+
+    if (!authResult.session.user?.email || !accessToken) {
       return NextResponse.json(
         {
           message:
             "Συνδέσου με τον Google λογαριασμό σου για να ανεβάζεις αποδείξεις στο προσωπικό σου Drive.",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    if (session.error === "RefreshAccessTokenError") {
+    if (authError === "RefreshAccessTokenError") {
       return NextResponse.json(
         {
           message:
             "Η σύνδεση με Google έληξε. Κάνε αποσύνδεση και ξανά σύνδεση.",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (!folderId) {
       return NextResponse.json(
         { message: "Missing GOOGLE_DRIVE_RECEIPTS_FOLDER_ID" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -64,18 +68,25 @@ export async function POST(request: NextRequest) {
     if (!(file instanceof File)) {
       return NextResponse.json(
         { message: "No file provided" },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    if (file.size > MAX_RECEIPT_BYTES) {
+      return NextResponse.json(
+        { message: "Image must be 8 MB or smaller." },
+        { status: 400 },
       );
     }
 
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { message: "Only image uploads are supported" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const driveClient = getUserDriveClient(session.accessToken);
+    const driveClient = getUserDriveClient(accessToken);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const response = await driveClient.files.create({
@@ -103,7 +114,7 @@ export async function POST(request: NextRequest) {
         message:
           "Δεν έγινε upload στο Google Drive. Έλεγξε ότι ο logged-in λογαριασμός βλέπει τον φάκελο και ότι το GOOGLE_DRIVE_RECEIPTS_FOLDER_ID είναι σωστό.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

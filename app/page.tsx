@@ -2,11 +2,13 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import {
-  getCurrentExpenseEntries,
-  getCurrentFuelEntries,
-  getCurrentServiceEntries,
+  getCurrentExpenseEntriesWithHealth,
+  getCurrentFuelEntriesWithHealth,
+  getCurrentServiceEntriesWithHealth,
   getCurrentVehicleProfile,
 } from "@/lib/current-user-data";
+import DataHealthBanner from "@/components/DataHealthBanner";
+import DataLoadError from "@/components/DataLoadError";
 import {
   calculateFuelStats,
   getRecentConsumptionTrend,
@@ -16,7 +18,12 @@ import PageMain from "@/components/PageMain";
 import PageSkeleton from "@/components/PageSkeleton";
 import ConsumptionBarChart from "@/components/ConsumptionBarChart";
 import CostDonutChart from "@/components/CostDonutChart";
+import ServiceReminderBanner from "@/components/ServiceReminderBanner";
 import ShareReportButton from "@/components/ShareReportButton";
+import {
+  getCurrentOdometer,
+  getServiceReminder,
+} from "@/lib/service-reminders";
 import type {
   ExpenseEntry,
   FuelEntry,
@@ -30,17 +37,28 @@ async function DashboardContent() {
   let expenseEntries: ExpenseEntry[] = [];
   let serviceEntries: ServiceEntry[] = [];
   let vehicleProfile: VehicleProfile | null = null;
+  let invalidRowCount = 0;
+  let loadFailed = false;
 
   try {
-    [fuelEntries, expenseEntries, serviceEntries, vehicleProfile] =
-      await Promise.all([
-        getCurrentFuelEntries(session),
-        getCurrentExpenseEntries(session),
-        getCurrentServiceEntries(session),
-        getCurrentVehicleProfile(session),
-      ]);
+    const [fuelResult, expenseResult, serviceResult, profile] = await Promise.all([
+      getCurrentFuelEntriesWithHealth(session),
+      getCurrentExpenseEntriesWithHealth(session),
+      getCurrentServiceEntriesWithHealth(session),
+      getCurrentVehicleProfile(session),
+    ]);
+
+    fuelEntries = fuelResult.entries;
+    expenseEntries = expenseResult.entries;
+    serviceEntries = serviceResult.entries;
+    vehicleProfile = profile;
+    invalidRowCount =
+      fuelResult.invalidRowCount +
+      expenseResult.invalidRowCount +
+      serviceResult.invalidRowCount;
   } catch (error) {
     console.error("Failed to load dashboard data", error);
+    loadFailed = true;
   }
 
   const stats = calculateFuelStats(fuelEntries);
@@ -60,6 +78,8 @@ async function DashboardContent() {
         .filter(Boolean)
         .join(" ")
     : "Το όχημά σου";
+  const currentOdometer = getCurrentOdometer(fuelEntries, serviceEntries);
+  const serviceReminder = getServiceReminder(serviceEntries, currentOdometer);
 
   return (
     <PageMain>
@@ -82,6 +102,7 @@ async function DashboardContent() {
               date: entry.date,
               liters: entry.liters,
               total_cost: entry.total_cost,
+              odometer: entry.odometer,
             }))}
             expenseEntries={expenseEntries.map((entry) => ({
               date: entry.date,
@@ -114,6 +135,13 @@ async function DashboardContent() {
           </Link>
         </div>
       </section>
+
+      {loadFailed ? <DataLoadError /> : null}
+      <DataHealthBanner invalidRowCount={invalidRowCount} />
+
+      {serviceReminder ? (
+        <ServiceReminderBanner reminder={serviceReminder} />
+      ) : null}
 
       <section className="mt-5 grid grid-cols-2 gap-3">
         <StatCard

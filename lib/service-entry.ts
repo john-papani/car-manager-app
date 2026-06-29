@@ -1,27 +1,16 @@
 import type { ServiceEntry } from "@/types/car";
-
-function parseSheetNumber(value: string) {
-  const normalizedValue = String(value ?? "").trim().replace(",", ".");
-
-  if (!normalizedValue) {
-    return 0;
-  }
-
-  const parsedValue = Number(normalizedValue);
-
-  return Number.isFinite(parsedValue) ? parsedValue : 0;
-}
+import { parseSheetNumberOrZero } from "@/lib/sheet-parse";
 
 export function mapRowToServiceEntry(
-  row: Record<string, string>
+  row: Record<string, string>,
 ): ServiceEntry {
-  const nextServiceOdometer = parseSheetNumber(row.next_service_odometer);
+  const nextServiceOdometer = parseSheetNumberOrZero(row.next_service_odometer);
 
   return {
     id: row.id,
     date: row.date,
-    odometer: parseSheetNumber(row.odometer),
-    total_cost: parseSheetNumber(row.total_cost),
+    odometer: parseSheetNumberOrZero(row.odometer),
+    total_cost: parseSheetNumberOrZero(row.total_cost),
     service_type: row.service_type,
     location: row.location,
     next_service_odometer: nextServiceOdometer || undefined,
@@ -41,4 +30,19 @@ export function isServiceEntryValid(entry: ServiceEntry) {
     Number.isFinite(entry.total_cost) &&
     entry.total_cost >= 0
   );
+}
+
+export function serviceEntryToRowValues(entry: ServiceEntry) {
+  return [
+    entry.id,
+    entry.date,
+    entry.odometer,
+    entry.total_cost,
+    entry.service_type,
+    entry.location || "",
+    entry.next_service_odometer ?? "",
+    entry.notes || "",
+    entry.created_at,
+    entry.updated_at,
+  ];
 }

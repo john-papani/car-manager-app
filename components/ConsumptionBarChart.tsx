@@ -24,7 +24,7 @@ export default function ConsumptionBarChart({
   const maxValue = Math.max(...points.map((point) => point.value), 1);
 
   return (
-    <div className="rounded-[1.6rem] bg-white/50 p-4">
+    <div className="rounded-[1.6rem] bg-white/50 p-4" role="img" aria-label="Γράφημα κατανάλωσης καυσίμου">
       <div className="flex h-40 items-end gap-3">
         {points.map((point) => {
           const height = Math.max((point.value / maxValue) * 100, 16);
@@ -50,6 +50,23 @@ export default function ConsumptionBarChart({
           );
         })}
       </div>
+      <table className="sr-only">
+        <caption>Τιμές κατανάλωσης L/100km</caption>
+        <thead>
+          <tr>
+            <th>Ημερομηνία</th>
+            <th>Κατανάλωση</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((point) => (
+            <tr key={point.id}>
+              <td>{point.date}</td>
+              <td>{point.value.toFixed(2)} L/100km</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

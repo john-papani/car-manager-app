@@ -2,24 +2,31 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createServiceEntry } from "@/services/serviceService";
+import { createServiceEntry, updateServiceEntry } from "@/services/serviceService";
 import { useToast } from "@/components/AppProviders";
 import FormActionBar from "@/components/FormActionBar";
 import FormShell from "@/components/FormShell";
+import type { ServiceEntry } from "@/types/car";
 
-export default function ServiceEntryForm() {
+type ServiceEntryFormProps = {
+  initialEntry?: ServiceEntry;
+};
+
+export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10),
-    odometer: "",
-    total_cost: "",
-    service_type: "",
-    location: "",
-    next_service_odometer: "",
-    notes: "",
+    date: initialEntry?.date ?? new Date().toISOString().slice(0, 10),
+    odometer: initialEntry ? String(initialEntry.odometer) : "",
+    total_cost: initialEntry ? String(initialEntry.total_cost) : "",
+    service_type: initialEntry?.service_type ?? "",
+    location: initialEntry?.location ?? "",
+    next_service_odometer: initialEntry?.next_service_odometer
+      ? String(initialEntry.next_service_odometer)
+      : "",
+    notes: initialEntry?.notes ?? "",
   });
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,7 +44,7 @@ export default function ServiceEntryForm() {
     setSubmitError("");
 
     try {
-      await createServiceEntry({
+      const payload = {
         date: form.date,
         odometer: Number(form.odometer),
         total_cost: form.total_cost ? Number(form.total_cost) : 0,
@@ -47,7 +54,13 @@ export default function ServiceEntryForm() {
           ? Number(form.next_service_odometer)
           : undefined,
         notes: form.notes,
-      });
+      };
+
+      if (initialEntry) {
+        await updateServiceEntry({ id: initialEntry.id, ...payload });
+      } else {
+        await createServiceEntry(payload);
+      }
 
       startTransition(() => {
         router.replace("/service");
@@ -183,7 +196,7 @@ export default function ServiceEntryForm() {
       <FormActionBar
         disabled={isSubmitting || isPending}
         isSubmitting={isSubmitting || isPending}
-        idleLabel="Αποθήκευση service"
+        idleLabel={initialEntry ? "Αποθήκευση αλλαγών" : "Αποθήκευση service"}
         submittingLabel={isPending ? "Μετάβαση..." : "Αποθήκευση..."}
       />
       </FormShell>

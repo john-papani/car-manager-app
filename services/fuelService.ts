@@ -1,4 +1,4 @@
-import type { CreateFuelEntryInput, FuelEntry } from "@/types/car";
+import type { CreateFuelEntryInput, FuelEntry, UpdateFuelEntryInput } from "@/types/car";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -35,6 +35,26 @@ export async function createFuelEntry(input: CreateFuelEntryInput) {
   if (!response.ok) {
     throw new Error(
       await getResponseMessage(response, "Failed to create fuel entry")
+    );
+  }
+
+  return response.json() as Promise<{ entry: FuelEntry }>;
+}
+
+export async function updateFuelEntry(
+  input: UpdateFuelEntryInput,
+) {
+  const response = await fetch("/api/fuel", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getResponseMessage(response, "Failed to update fuel entry"),
     );
   }
 

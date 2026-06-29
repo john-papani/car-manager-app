@@ -15,6 +15,7 @@ const SHEET_SCHEMAS: Record<string, string[]> = {
     "notes",
     "receipt_file_id",
     "receipt_url",
+    "calendar_event_id",
     "created_at",
     "updated_at",
   ],
@@ -105,6 +106,29 @@ function normalizeSchemaRow(row: string[], headers: string[]) {
 }
 
 const verifiedSheets = new Set<string>();
+const SHEET_WRITE_MAX_ATTEMPTS = 3;
+
+async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withSheetWriteRetry<T>(operation: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= SHEET_WRITE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < SHEET_WRITE_MAX_ATTEMPTS) {
+        await sleep(100 * attempt);
+      }
+    }
+  }
+
+  throw lastError;
+}
 
 async function ensureSheetHeaders(sheetName: string) {
   if (!spreadsheetId) {
@@ -196,122 +220,130 @@ export async function upsertRowById(
   rowId: string,
   values: unknown[],
 ) {
-  if (!spreadsheetId) {
-    throw new Error("Missing GOOGLE_SHEET_ID");
-  }
-
-  if (!rowId) {
-    throw new Error("Missing row id");
-  }
-
-  await ensureSheetHeaders(sheetName);
-
-  const sheetsClient = getSheetsClient();
-  const response = await sheetsClient.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetName}!A:Z`,
-  });
-  const existingRows = response.data.values || [];
-  const schemaHeaders = SHEET_SCHEMAS[sheetName];
-  const dataStartIndex =
-    schemaHeaders && existingRows[0] && hasHeaderRow(existingRows[0], schemaHeaders)
-      ? 1
-      : 0;
-
-  const rowIndex = existingRows.findIndex((row, index) => {
-    if (index < dataStartIndex) {
-      return false;
+  return withSheetWriteRetry(async () => {
+    if (!spreadsheetId) {
+      throw new Error("Missing GOOGLE_SHEET_ID");
     }
 
-    return String(row[0] ?? "").trim() === rowId;
+    if (!rowId) {
+      throw new Error("Missing row id");
+    }
+
+    await ensureSheetHeaders(sheetName);
+
+    const sheetsClient = getSheetsClient();
+    const response = await sheetsClient.spreadsheets.values.get({
+      spreadsheetId,
+      range: getSheetRange(sheetName),
+    });
+    const existingRows = response.data.values || [];
+    const schemaHeaders = SHEET_SCHEMAS[sheetName];
+    const dataStartIndex =
+      schemaHeaders &&
+      existingRows[0] &&
+      hasHeaderRow(existingRows[0], schemaHeaders)
+        ? 1
+        : 0;
+
+    const rowIndex = existingRows.findIndex((row, index) => {
+      if (index < dataStartIndex) {
+        return false;
+      }
+
+      return String(row[0] ?? "").trim() === rowId;
+    });
+
+    if (rowIndex === -1) {
+      await appendRow(sheetName, values);
+      return "inserted";
+    }
+
+    const expectedColumns =
+      schemaHeaders?.length ?? Math.max(values.length, 1);
+    const targetRange = `${sheetName}!A${rowIndex + 1}:${getColumnName(expectedColumns)}${rowIndex + 1}`;
+
+    await sheetsClient.spreadsheets.values.update({
+      spreadsheetId,
+      range: targetRange,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [values],
+      },
+    });
+
+    return "updated";
   });
-
-  if (rowIndex === -1) {
-    await appendRow(sheetName, values);
-    return "inserted";
-  }
-
-  const targetRange = `${sheetName}!A${rowIndex + 1}:${getColumnName(values.length)}${rowIndex + 1}`;
-
-  await sheetsClient.spreadsheets.values.update({
-    spreadsheetId,
-    range: targetRange,
-    valueInputOption: "USER_ENTERED",
-    requestBody: {
-      values: [values],
-    },
-  });
-
-  return "updated";
 }
 
 export async function deleteRowById(sheetName: string, rowId: string) {
-  if (!spreadsheetId) {
-    throw new Error("Missing GOOGLE_SHEET_ID");
-  }
+  return withSheetWriteRetry(async () => {
+    if (!spreadsheetId) {
+      throw new Error("Missing GOOGLE_SHEET_ID");
+    }
 
-  if (!rowId) {
-    throw new Error("Missing row id");
-  }
+    if (!rowId) {
+      throw new Error("Missing row id");
+    }
 
-  await ensureSheetHeaders(sheetName);
+    await ensureSheetHeaders(sheetName);
 
-  const sheetsClient = getSheetsClient();
-  const spreadsheet = await sheetsClient.spreadsheets.get({
-    spreadsheetId,
-    fields: "sheets(properties(sheetId,title))",
-  });
-  const targetSheet = spreadsheet.data.sheets?.find(
-    (sheet) => sheet.properties?.title === sheetName,
-  );
-  const sheetId = targetSheet?.properties?.sheetId;
+    const sheetsClient = getSheetsClient();
+    const spreadsheet = await sheetsClient.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets(properties(sheetId,title))",
+    });
+    const targetSheet = spreadsheet.data.sheets?.find(
+      (sheet) => sheet.properties?.title === sheetName,
+    );
+    const sheetId = targetSheet?.properties?.sheetId;
 
-  if (sheetId === undefined) {
-    throw new Error(`Sheet ${sheetName} was not found`);
-  }
+    if (sheetId === undefined) {
+      throw new Error(`Sheet ${sheetName} was not found`);
+    }
 
-  const response = await sheetsClient.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetName}!A:Z`,
-  });
-  const values = response.data.values || [];
-  const schemaHeaders = SHEET_SCHEMAS[sheetName];
-  const dataStartIndex =
-    schemaHeaders && values[0] && hasHeaderRow(values[0], schemaHeaders)
-      ? 1
-      : 0;
+    const response = await sheetsClient.spreadsheets.values.get({
+      spreadsheetId,
+      range: getSheetRange(sheetName),
+    });
+    const values = response.data.values || [];
+    const schemaHeaders = SHEET_SCHEMAS[sheetName];
+    const dataStartIndex =
+      schemaHeaders && values[0] && hasHeaderRow(values[0], schemaHeaders)
+        ? 1
+        : 0;
 
-  const rowIndex = values.findIndex((row, index) => {
-    if (index < dataStartIndex) {
+    const rowIndex = values.findIndex((row, index) => {
+      if (index < dataStartIndex) {
+        return false;
+      }
+
+      return String(row[0] ?? "").trim() === rowId;
+    });
+
+    if (rowIndex === -1) {
       return false;
     }
 
-    return String(row[0] ?? "").trim() === rowId;
-  });
-
-  if (rowIndex === -1) {
-    return false;
-  }
-
-  await sheetsClient.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId,
-              dimension: "ROWS",
-              startIndex: rowIndex,
-              endIndex: rowIndex + 1,
+    await sheetsClient.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId,
+                dimension: "ROWS",
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1,
+              },
             },
           },
-        },
-      ],
-    },
-  });
+        ],
+      },
+    });
 
-  return true;
+    return true;
+  });
 }
 export async function getRowById(
   sheetName: string,
@@ -335,7 +367,7 @@ export async function getRows(sheetName: string) {
 
   const response = await sheetsClient.spreadsheets.values.get({
     spreadsheetId,
-    range: `${sheetName}!A:Z`,
+    range: getSheetRange(sheetName),
   });
 
   const values = response.data.values || [];

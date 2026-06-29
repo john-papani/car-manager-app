@@ -1,21 +1,10 @@
 import type { VehicleProfile } from "@/types/car";
-
-function parseSheetNumber(value: string) {
-  const normalizedValue = String(value ?? "").trim().replace(",", ".");
-
-  if (!normalizedValue) {
-    return 0;
-  }
-
-  const parsedValue = Number(normalizedValue);
-
-  return Number.isFinite(parsedValue) ? parsedValue : 0;
-}
+import { parseSheetNumberOrZero } from "@/lib/sheet-parse";
 
 export function mapRowToVehicleProfile(
   row: Record<string, string>,
 ): VehicleProfile {
-  const year = parseSheetNumber(row.year);
+  const year = parseSheetNumberOrZero(row.year);
 
   return {
     id: row.id,

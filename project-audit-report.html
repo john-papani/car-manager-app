@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Car Manager — Project Audit Report</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #12313b;
+      --accent-soft: #e8f0f2;
+      --critical: #b42318;
+      --critical-bg: #fef3f2;
+      --high: #b54708;
+      --high-bg: #fffaeb;
+      --medium: #b45309;
+      --medium-bg: #fffbeb;
+      --low: #026aa2;
+      --low-bg: #f0f9ff;
+      --improvement: #027a48;
+      --improvement-bg: #ecfdf3;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+      --toc-width: 280px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--toc-width) 1fr;
+      min-height: 100vh;
+    }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 1rem 2rem 1.5rem;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+    }
+
+    .toc h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+
+    .toc a {
+      display: block;
+      padding: 0.4rem 0.6rem;
+      margin-bottom: 0.15rem;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .toc a:hover { background: var(--accent-soft); }
+
+    .content {
+      max-width: 980px;
+      padding: 2rem 2.5rem 4rem;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #12313b 0%, #214955 55%, #ca6f3d 140%);
+      color: #fff;
+      border-radius: calc(var(--radius) + 4px);
+      padding: 2rem 2.25rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      margin: 0 0 0.35rem;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero .meta {
+      opacity: 0.85;
+      font-size: 0.92rem;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--radius);
+      backdrop-filter: blur(8px);
+    }
+
+    .score-ring {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.15);
+      border: 3px solid rgba(255,255,255,0.45);
+      flex-shrink: 0;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 1rem;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card h3 {
+      margin: 1.5rem 0 0.75rem;
+      font-size: 1.05rem;
+    }
+
+    .card h3:first-of-type { margin-top: 0; }
+
+    p { margin: 0 0 0.85rem; }
+
+    ul, ol { margin: 0 0 1rem; padding-left: 1.35rem; }
+
+    li { margin-bottom: 0.35rem; }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88rem;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 0.12rem 0.4rem;
+      border-radius: 5px;
+      color: #0f172a;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem 1.15rem;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      vertical-align: middle;
+    }
+
+    .badge-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid #fecdca; }
+    .badge-high { background: var(--high-bg); color: var(--high); border: 1px solid #fedf89; }
+    .badge-medium { background: var(--medium-bg); color: var(--medium); border: 1px solid #fde68a; }
+    .badge-low { background: var(--low-bg); color: var(--low); border: 1px solid #b9e6fe; }
+    .badge-improvement { background: var(--improvement-bg); color: var(--improvement); border: 1px solid #abefc6; }
+
+    .finding {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem 1.25rem;
+      margin-bottom: 1rem;
+      background: #fafbfc;
+    }
+
+    .finding-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .finding-header h4 {
+      margin: 0;
+      font-size: 1rem;
+      flex: 1 1 auto;
+    }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0.35rem 1rem;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta-row dt { color: var(--muted); font-weight: 600; margin: 0; }
+    .meta-row dd { margin: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) td { background: #fcfdfe; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem;
+      margin: 1rem 0;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      background: #fafbfc;
+    }
+
+    .stat .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .stat .value { font-size: 1.4rem; font-weight: 700; margin-top: 0.2rem; }
+
+    .phase {
+      border-left: 4px solid var(--accent);
+      padding-left: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .phase h3 { margin-top: 0; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc {
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .content { padding: 1.25rem; }
+      .meta-row { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+
+    @media print {
+      .toc { display: none; }
+      .layout { display: block; }
+      .hero { break-inside: avoid; }
+      .finding { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+      <a href="#executive-summary">Executive summary</a>
+      <a href="#summary-table">Findings summary</a>
+      <a href="#section-1">1. Architecture</a>
+      <a href="#section-2">2. Security &amp; auth</a>
+      <a href="#section-3">3. Google integrations</a>
+      <a href="#section-4">4. API &amp; validation</a>
+      <a href="#section-5">5. Performance</a>
+      <a href="#section-6">6. UX &amp; accessibility</a>
+      <a href="#section-7">7. TypeScript</a>
+      <a href="#section-8">8. Testing</a>
+      <a href="#section-9">9. Production readiness</a>
+      <a href="#section-10">10. Action plan</a>
+      <a href="#quick-wins">Quick wins</a>
+      <a href="#before-production">Before production</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#top-10">Top 10 improvements</a>
+    </nav>
+
+    <main class="content">
+      <header class="hero" id="executive-summary">
+        <h1>Car Manager — Code Audit Report</h1>
+        <p class="meta">Repository audit · Next.js 16 · TypeScript · Google Sheets backend · Generated June 29, 2026</p>
+        <div class="score-card">
+          <div class="score-ring">62</div>
+          <div>
+            <strong>Overall project health: 62 / 100</strong>
+            <p style="margin:0.35rem 0 0; opacity:0.92; font-size:0.95rem;">
+              The codebase is a coherent, mobile-first MVP with clear separation between pages, API routes, sheet helpers, and entry mappers. Demo mode, caching, and form UX are thoughtfully implemented. However, API authentication gaps, single-tenant shared-sheet architecture, calendar/receipt lifecycle bugs, and missing production hardening block a higher score. The app is suitable for personal/local use today; it is not production-ready without critical security fixes.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Scope &amp; methodology</h2>
+        <p>This audit reviewed all application source under the repository root: App Router pages (<code>app/</code>), API route handlers (<code>app/api/</code>), shared libraries (<code>lib/</code>), client services (<code>services/</code>), React components (<code>components/</code>), Auth.js configuration (<code>auth.ts</code>, <code>proxy.ts</code>), and types (<code>types/</code>). No application code was modified. Findings are evidence-based from static analysis; runtime deployment behavior is marked “Needs verification” where not observable from the repo alone.</p>
+        <div class="summary-grid">
+          <div class="stat"><div class="label">Stack</div><div class="value" style="font-size:1rem;">Next 16.2.6, React 19, Auth.js 5 beta</div></div>
+          <div class="stat"><div class="label">Source files reviewed</div><div class="value">~75</div></div>
+          <div class="stat"><div class="label">Automated tests</div><div class="value">0</div></div>
+          <div class="stat"><div class="label">Critical findings</div><div class="value">3</div></div>
+        </div>
+      </section>
+
+      <section class="card" id="summary-table">
+        <h2>Findings summary table</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Issue</th>
+              <th>Affected files</th>
+              <th>Impact</th>
+              <th>Recommended action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>API routes unauthenticated for reads; writes skip session check</td>
+              <td><code>app/api/fuel/route.ts</code>, <code>service/route.ts</code>, <code>expenses/route.ts</code>, <code>vehicle/route.ts</code>, <code>receipts/route.ts</code></td>
+              <td>Anyone can read/write/delete shared sheet data if API is reachable</td>
+              <td>Require <code>auth()</code> on all mutating routes; return 401 when no session; protect GET or move reads server-only</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Single shared Google Sheet — no user/tenant isolation</td>
+              <td><code>lib/sheets.ts</code>, <code>lib/current-user-data.ts</code>, all API routes</td>
+              <td>All authenticated users share one dataset; no ownership model</td>
+              <td>Per-user sheet/tab mapping or migrate to a real database with user_id column</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Hardcoded demo credentials in production path</td>
+              <td><code>auth.ts</code></td>
+              <td>Public <code>user/user</code> login if Credentials provider stays enabled</td>
+              <td>Disable demo provider in production via env flag</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Google OAuth access token attached to session</td>
+              <td><code>auth.ts</code>, <code>types/next-auth.d.ts</code></td>
+              <td>Token may be exposed to browser via <code>/api/auth/session</code></td>
+              <td>Keep tokens server-side only; use encrypted JWT without client-readable access token</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Calendar event ID never stored; delete cleanup broken</td>
+              <td><code>lib/calendar.ts</code>, <code>lib/sheets.ts</code>, <code>app/api/fuel/route.ts</code></td>
+              <td>Orphan calendar events; delete never removes linked event</td>
+              <td>Add <code>calendar_event_id</code> column; persist ID after insert</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Google Sheets read-modify-write races</td>
+              <td><code>lib/sheets.ts</code> (<code>upsertRowById</code>, <code>deleteRowById</code>)</td>
+              <td>Concurrent writes can delete/update wrong row or duplicate data</td>
+              <td>Add retry/locking or migrate off Sheets for writes</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>Receipt upload lacks size limits &amp; strong validation</td>
+              <td><code>app/api/receipts/route.ts</code></td>
+              <td>DoS via large uploads; MIME spoofing possible</td>
+              <td>Enforce max bytes, magic-byte check, rate limit</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Weak server-side payload validation</td>
+              <td>All POST/PUT/PATCH handlers</td>
+              <td>NaN, negative, or garbage values can be stored</td>
+              <td>Add Zod schemas with numeric/date bounds</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Fuel stats pair by odometer, not date</td>
+              <td><code>lib/fuel-calculations.ts</code>, <code>app/fuel/page.tsx</code></td>
+              <td>Wrong consumption if odometer entries out of order</td>
+              <td>Sort by date first; validate monotonic odometer</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Silent drop of malformed sheet rows</td>
+              <td><code>lib/*-entry.ts</code>, <code>lib/current-user-data.ts</code></td>
+              <td>Data disappears from UI with no admin signal</td>
+              <td>Log/reject invalid rows; surface data health warnings</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Dashboard swallows load errors</td>
+              <td><code>app/page.tsx</code>, list pages</td>
+              <td>Users see empty dashboard instead of failure state</td>
+              <td>Show explicit error UI when sheet fetch fails</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Accessibility gaps in charts, delete, zoom</td>
+              <td><code>components/ConsumptionBarChart.tsx</code>, <code>CostDonutChart.tsx</code>, <code>DeleteEntryButton.tsx</code>, <code>app/layout.tsx</code></td>
+              <td>Screen reader and low-vision users miss chart data; zoom disabled</td>
+              <td>Add data tables/ARIA; replace confirm(); remove maximumScale</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Duplicated <code>parseSheetNumber</code> in four files</td>
+              <td><code>lib/fuel-entry.ts</code>, <code>service-entry.ts</code>, <code>expense-entry.ts</code>, <code>vehicle-profile.ts</code></td>
+              <td>Drift risk when parsing rules change</td>
+              <td>Extract shared <code>lib/sheet-parse.ts</code></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-low">Low</span></td>
+              <td>Unused <code>AuthBanner</code> component</td>
+              <td><code>components/AuthBanner.tsx</code></td>
+              <td>Dead code / maintenance noise</td>
+              <td>Remove or wire into fuel receipt flow</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-improvement">Improvement</span></td>
+              <td>No edit flows for entries</td>
+              <td>Forms, API routes, README</td>
+              <td>Users must delete &amp; re-create to fix mistakes</td>
+              <td>Implement PATCH/PUT for full entry edits</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-improvement">Improvement</span></td>
+              <td>Zero automated tests</td>
+              <td>Entire repo</td>
+              <td>Regressions likely as features grow</td>
+              <td>Add unit tests for calculations &amp; API auth</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- SECTION 1 -->
+      <section class="card" id="section-1">
+        <h2>1. Architecture and code organization</h2>
+        <p>The project follows a sensible Next.js App Router layout: server-rendered pages fetch data through <code>lib/current-user-data.ts</code>, mutations go through <code>app/api/*</code>, and client forms call thin fetch wrappers in <code>services/</code>. Entry mapping and validation live in dedicated <code>lib/*-entry.ts</code> modules. This is maintainable for an MVP.</p>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-improvement">Improvement</span>
+            <h4>Clear layered structure with room to consolidate</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/</code>, <code>lib/current-user-data.ts</code>, <code>services/</code>, <code>lib/sheets.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Pages depend on <code>getCurrent*Entries()</code> which correctly branches demo vs live data. API routes duplicate sorting/validation logic that could eventually move into shared command functions.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Low today; increases change cost as features grow.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Introduce a small server-side “commands” module per domain (fuel, service, etc.) used by both pages and API routes.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4><code>proxy.ts</code> correctly replaces middleware; API routes intentionally excluded</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>proxy.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Next.js 16 renamed middleware to proxy. This project uses Auth.js <code>export default auth(...)</code> with a matcher that excludes <code>/api</code>. Page routes redirect unauthenticated users to <code>/login</code>, but API security must be enforced inside handlers — which is currently incomplete (see Section 2).</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Architectural expectation: proxy is UX redirect only, not the security boundary.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Document that API routes require explicit <code>auth()</code> checks; add shared <code>requireSession()</code> helper.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Dead code: <code>AuthBanner</code> never imported</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/AuthBanner.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Grep shows no imports of <code>AuthBanner</code> outside its own file. Drive status UX lives elsewhere (<code>app/api/drive-check/route.ts</code>, account page).</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Remove or integrate into fuel receipt upload UI.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section class="card" id="section-2">
+        <h2>2. Security and authentication</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-critical">Critical</span>
+            <h4>API GET endpoints expose sheet data without authentication</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/api/fuel/route.ts</code> (GET), <code>app/api/service/route.ts</code> (GET), <code>app/api/expenses/route.ts</code> (GET), <code>app/api/vehicle/route.ts</code> (GET)</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>GET handlers call <code>getCurrentFuelEntries()</code> etc. without calling <code>auth()</code>. Because <code>proxy.ts</code> excludes <code>/api/*</code>, unauthenticated HTTP clients can fetch all entries as JSON.</dd></dl>
+          <pre>// app/api/fuel/route.ts — GET has no auth() call
+export async function GET() {
+  const entries = (await getCurrentFuelEntries()).sort(...);
+  return NextResponse.json({ entries });
+}</pre>
+          <dl class="meta-row"><dt>Impact</dt><dd>Full vehicle cost history, odometer readings, receipt URLs, and profile data leak to anyone who can reach the deployment URL.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>
+<pre>const session = await auth();
+if (!session?.user) {
+  return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+}</pre>
+          </dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-critical">Critical</span>
+            <h4>POST/PUT/PATCH/DELETE only block demo users — not unauthenticated callers</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd>All mutating API handlers except auth routes</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Handlers check <code>isDemoSession(session)</code> but never verify <code>session?.user</code>. When <code>session</code> is <code>null</code>, <code>isDemoSession</code> returns false and the write proceeds using the service account in <code>lib/google.ts</code>.</dd></dl>
+          <pre>// lib/demo-mode.ts
+export function isDemoSession(session) {
+  return session?.user?.id === "demo-user" || session?.user?.email === "user@local.demo";
+}
+// null session → false → write allowed</pre>
+          <dl class="meta-row"><dt>Impact</dt><dd>Unauthenticated clients can create, update, and delete rows in the production spreadsheet.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Add <code>requireAuthenticatedSession()</code> returning 401 before any mutation; keep demo 403 separate.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-critical">Critical</span>
+            <h4>Hardcoded demo credentials (<code>user</code> / <code>user</code>)</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>auth.ts</code> lines 12–13, 77–85; <code>app/login/page.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Credentials provider accepts fixed username/password with no environment guard. README documents this for local testing.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>If deployed with Credentials provider enabled, anyone can sign in as demo user (read-only for writes, but still accesses mock flow — and combined with API gaps, behavior is unpredictable).</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Gate provider on <code>process.env.ENABLE_DEMO_LOGIN === "true"</code>; disable in production.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>Google OAuth access token stored on client-visible session</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>auth.ts</code> (session callback), <code>types/next-auth.d.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>session.accessToken = token.accessToken</code> exposes the Google access token through Auth.js session endpoints. Refresh token stays in JWT only (good), but access token in session is still sensitive.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>XSS or malicious browser extension could exfiltrate Drive-scoped access token while session is active.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Remove <code>accessToken</code> from session callback; read token from JWT inside server routes only via <code>auth()</code> internals or custom server-only helper.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>No ownership checks on entry mutations</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/api/fuel/route.ts</code> PATCH/DELETE, other DELETE handlers</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Any authenticated user (once session check exists) can PATCH receipt fields or DELETE any row by UUID. Sheets have no <code>user_id</code> column.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>In multi-user scenarios, cross-user tampering is trivial even after auth is fixed.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Part of multi-tenant redesign; short-term acceptable only for single-user deployment.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Large</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Environment variables handled safely in code (no committed secrets)</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/google.ts</code>, <code>README.md</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Service account key read from env; placeholder detection for <code>GOOGLE_PRIVATE_KEY</code>. No <code>.env</code> files in repo. <code>AUTH_SECRET</code> documented but not referenced explicitly in code (Auth.js reads it automatically — Needs verification at runtime).</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Positive finding; reduces accidental secret commit risk.</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section class="card" id="section-3">
+        <h2>3. Google integrations and data integrity</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-critical">Critical</span>
+            <h4>Single shared spreadsheet — no per-user data separation</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code> (<code>GOOGLE_SHEET_ID</code>), <code>lib/current-user-data.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>All non-demo users read/write the same tabs (<code>fuel_entries</code>, etc.). README acknowledges “Multi-user data separation is still limited.”</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Not suitable for shared hosting; one user’s deletes affect everyone.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Map <code>session.user.id</code> → sheet ID or add <code>owner_id</code> column with query filters.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Large</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>Calendar events created but event ID never persisted</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/calendar.ts</code>, <code>lib/sheets.ts</code> (schema), <code>app/api/fuel/route.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>createFuelCalendarEvent</code> calls <code>calendar.events.insert</code> but discards the returned event ID. Schema lacks <code>calendar_event_id</code>. DELETE handler reads <code>entry.calendar_event_id</code> which is never populated.</dd></dl>
+          <pre>// app/api/fuel/route.ts DELETE
+const calendarEventId = entry.calendar_event_id; // always undefined in practice</pre>
+          <dl class="meta-row"><dt>Impact</dt><dd>Calendar fills with orphan events; deletes leave stale events; repeated entries create duplicates.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Add column to schema; after insert, PATCH row with returned <code>event.id</code>; use on delete.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>Non-atomic read-modify-write on Sheets</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code> — <code>upsertRowById</code>, <code>deleteRowById</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Both functions GET all rows, find index by ID, then UPDATE or DELETE by row index. Concurrent requests can race: two appends OK, but simultaneous delete+upsert can target wrong row after index shift.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Wrong row deleted or duplicate rows under concurrent use (e.g., two devices).</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Retry with re-fetch; use batchUpdate with filters; long-term migrate to DB with transactions.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium–Large</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Header initialization can overwrite row 1 on partial mismatch</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code> — <code>ensureSheetHeaders</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>If first row doesn’t exactly match expected headers, code overwrites A1:N1 with schema headers. Manual edits to headers trigger rewrite (data rows safe, but header customization lost).</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Unexpected header reset; confusing for manual sheet editors.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Malformed sheet values silently become zero and get filtered out</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/fuel-entry.ts</code> etc., <code>isFuelEntryValid</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>parseSheetNumber</code> returns <code>0</code> for invalid input. Validators then reject rows with odometer/liters ≤ 0. User sees fewer entries than exist in sheet with no warning.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Hidden data loss in UI; hard to debug manual sheet corruption.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Return <code>null</code> for invalid numbers; collect invalid rows for admin warning panel.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4><code>verifiedSheets</code> in-memory Set is per server instance</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Header verification cached in module scope. Serverless cold starts re-verify (acceptable). Not a bug, but not a global lock.</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 4 -->
+      <section class="card" id="section-4">
+        <h2>4. API routes and validation</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Truthy checks allow invalid numeric payloads</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/api/fuel/route.ts</code> POST, <code>app/api/service/route.ts</code>, <code>app/api/expenses/route.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Fuel POST: <code>if (!body.odometer || !body.liters || !body.total_cost)</code> rejects zero but accepts negative numbers and NaN (<code>Number(undefined)</code> → NaN stored). Service allows <code>total_cost: 0</code> by default. Expense checks <code>total_cost === undefined</code> but not NaN.</dd></dl>
+          <pre>// Weak validation pattern
+if (!body.date || !body.odometer || !body.liters || !body.total_cost) { ... }
+const entry = { odometer: Number(body.odometer), ... };</pre>
+          <dl class="meta-row"><dt>Fix</dt><dd>Use Zod: positive numbers, ISO date strings, max string lengths, enum categories.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>Receipt upload: client-controlled MIME, no size cap</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/api/receipts/route.ts</code>, <code>lib/compress-image.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Server checks <code>file.type.startsWith("image/")</code> only. No <code>file.size</code> limit before buffering entire file into memory (<code>arrayBuffer()</code>).</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Large upload memory exhaustion; MIME spoofing if downstream trusts type.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Reject &gt; 5–8 MB; validate magic bytes; sanitize filename (already timestamps).</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Demo mode write protection is correctly implemented on mutating routes</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/demo-mode.ts</code>, all POST/PUT/PATCH/DELETE handlers</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Demo session returns 403 with Greek/English message. <code>getCurrent*Entries</code> serves mock data. Positive finding — demo cannot write to Sheets when session check is also added.</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Background receipt attach can fail silently</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/FuelEntryForm.tsx</code>, <code>components/FuelPageFeedback.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Upload runs after navigation; errors only <code>console.error</code>. User sees “uploading in background” toast but no failure toast.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Dispatch error event to show error toast on failure.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 5 -->
+      <section class="card" id="section-5">
+        <h2>5. Performance and scalability</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Every sheet read fetches full tab (<code>A:Z</code>)</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code> — <code>getRows</code>, <code>upsertRowById</code>, <code>deleteRowById</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>No pagination. Dashboard loads four tabs via <code>getCachedRows</code> with <code>cacheLife("minutes")</code> — good for MVP, but mutations revalidate tags.</dd></dl>
+          <dl class="meta-row"><dt>Impact</dt><dd>Latency grows linearly with row count; Sheets API quota pressure.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>For large histories, cache aggressively, add date filters, or migrate to DB.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-improvement">Improvement</span>
+            <h4>Next.js cache components used appropriately</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code>, <code>next.config.ts</code> (<code>cacheComponents: true</code>)</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>getCachedRows</code> uses <code>"use cache"</code> with tags; API routes call <code>revalidateTag</code> after writes. Solid pattern for read-heavy MVP.</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Duplicate full-sheet reads during upsert/delete</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/sheets.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>getRowById</code> calls <code>getRows</code> (full read). DELETE reads sheet metadata + full values. Acceptable at small scale.</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 6 -->
+      <section class="card" id="section-6">
+        <h2>6. UX, mobile experience, and accessibility</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-improvement">Improvement</span>
+            <h4>Strong mobile-first UI foundation</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/AppShell.tsx</code>, <code>BottomNav.tsx</code>, forms, <code>public/manifest.json</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Safe-area padding on bottom nav, large touch targets, loading skeletons, empty states, toast feedback, client-side image compression before upload. PWA manifest present (no service worker — Needs verification for offline).</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4><code>maximumScale: 1</code> prevents pinch-zoom</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/layout.tsx</code> viewport export</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>maximumScale: 1</code> blocks zoom on iOS — WCAG 2.2 failure for low-vision users unless all text meets size/contrast without zoom.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Remove <code>maximumScale</code> or set to 5; rely on responsive typography.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Charts lack accessible text alternatives</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/ConsumptionBarChart.tsx</code>, <code>components/CostDonutChart.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Bar chart uses decorative divs; donut uses SVG paths without <code>role="img"</code>, <code>aria-label</code>, or hidden data table. Empty states are text-only (good).</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Add visually hidden table summarizing values; <code>aria-label</code> on chart container.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Delete uses <code>window.confirm</code> — poor accessibility</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/DeleteEntryButton.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Native confirm dialogs are inconsistently announced, not stylable, and easy to mis-click on mobile.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Accessible modal with focus trap, <code>aria-modal</code>, keyboard support.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Some form labels missing <code>htmlFor</code> / <code>id</code> pairs</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/FuelEntryForm.tsx</code>, <code>ExpenseEntryForm.tsx</code>, <code>ServiceEntryForm.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Labels wrap content or lack explicit association unlike login page which uses proper <code>htmlFor</code>.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Sheet load failures show empty UI, not error state</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/page.tsx</code>, <code>app/fuel/page.tsx</code>, etc.</dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>try/catch</code> logs error and continues with empty arrays — user sees “add first entry” instead of “failed to connect to Google Sheets.”</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Track error flag; render dedicated error component with retry.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 7 -->
+      <section class="card" id="section-7">
+        <h2>7. TypeScript and maintainability</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Duplicated <code>parseSheetNumber</code> in four modules</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/fuel-entry.ts</code>, <code>lib/service-entry.ts</code>, <code>lib/expense-entry.ts</code>, <code>lib/vehicle-profile.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Single exported parser with explicit invalid handling.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Unsafe casts on request JSON bodies</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd>All API POST/PUT/PATCH handlers, <code>services/*.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Pattern: <code>(await request.json()) as CreateFuelEntryInput</code> — no runtime validation, TypeScript trust only.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Zod parse at boundary; infer types from schema.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Calendar delete references non-existent typed field</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>app/api/fuel/route.ts</code>, <code>types/car.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>entry.calendar_event_id</code> used but not on <code>FuelEntry</code> type or sheet schema — TypeScript may not catch if <code>entry</code> is <code>Record&lt;string, string&gt;</code> from <code>getRowById</code>.</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-improvement">Improvement</span>
+            <h4>Types in <code>types/car.ts</code> are clear and domain-focused</h4>
+          </div>
+          <dl class="meta-row"><dt>Explanation</dt><dd>Separate create/update input types; no excessive <code>any</code> usage found in reviewed files.</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 8 -->
+      <section class="card" id="section-8">
+        <h2>8. Testing and reliability</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>No automated tests in repository</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd>Entire repo — no <code>*.test.*</code>, no test script in <code>package.json</code></dd></dl>
+          <dl class="meta-row"><dt>High-risk untested areas</dt><dd>
+            <ul>
+              <li><code>lib/fuel-calculations.ts</code> — consumption, averages</li>
+              <li><code>lib/sheets.ts</code> — upsert/delete indexing</li>
+              <li>API auth guards (once added)</li>
+              <li><code>isDemoSession</code> / demo write blocking</li>
+              <li>Receipt upload validation</li>
+            </ul>
+          </dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Add Vitest; unit test calculations and parsers; integration tests for API with mocked auth.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Fuel consumption logic edge cases untested</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>lib/fuel-calculations.ts</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>calculateConsumption</code> returns null when odometer doesn’t increase or not full tank. Sorting is by odometer, not date — if user backdates an entry with lower odometer, pairs may be wrong.</dd></dl>
+          <pre>// Pairs adjacent entries in odometer order, not chronological date order
+const chronologicalEntries = [...entries].sort((a, b) => a.odometer - b.odometer);</pre>
+          <dl class="meta-row"><dt>Fix</dt><dd>Document assumption; validate odometer monotonicity on create; add tests.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small–Medium</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 9 -->
+      <section class="card" id="section-9">
+        <h2>9. Production readiness</h2>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-high">High</span>
+            <h4>Not production-ready without auth and tenant fixes</h4>
+          </div>
+          <dl class="meta-row"><dt>Explanation</dt><dd>README “Known Limitations” aligns with findings. Missing: CI pipeline, health check endpoint, structured logging, error monitoring (Sentry/App Insights), rate limiting, backup strategy.</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Observability gaps</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd>API routes use <code>console.error</code> only</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Structured logger; correlate request ID; alert on Sheets API failures.</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Medium</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-low">Low</span>
+            <h4>Deployment configuration not in repo</h4>
+          </div>
+          <dl class="meta-row"><dt>Explanation</dt><dd>No Dockerfile, <code>vercel.json</code>, or Azure config. Needs verification for target host env var setup and <code>AUTH_SECRET</code> / OAuth redirect URLs.</dd></dl>
+        </div>
+
+        <div class="finding">
+          <div class="finding-header">
+            <span class="badge badge-medium">Medium</span>
+            <h4>Monthly report date parsing timezone sensitivity</h4>
+          </div>
+          <dl class="meta-row"><dt>Files</dt><dd><code>components/ShareReportButton.tsx</code></dd></dl>
+          <dl class="meta-row"><dt>Explanation</dt><dd><code>new Date("2026-05-31")</code> parses as UTC midnight; <code>getMonth()</code> uses local timezone — edge cases near month boundaries in non-UTC zones.</dd></dl>
+          <dl class="meta-row"><dt>Fix</dt><dd>Compare year/month from ISO string parts (<code>dateStr.slice(0,7)</code>).</dd></dl>
+          <dl class="meta-row"><dt>Effort</dt><dd>Small</dd></dl>
+        </div>
+      </section>
+
+      <!-- SECTION 10 -->
+      <section class="card" id="section-10">
+        <h2>10. Prioritized action plan</h2>
+        <ol>
+          <li><strong>Immediate (Critical):</strong> Add session requirement to all API routes; return 401/403 appropriately.</li>
+          <li><strong>Immediate (Critical):</strong> Disable demo Credentials provider in production builds.</li>
+          <li><strong>Week 1 (High):</strong> Fix calendar event ID persistence; receipt upload limits; remove accessToken from client session.</li>
+          <li><strong>Week 2 (Medium):</strong> Zod validation; error states on pages; a11y fixes (zoom, charts, delete modal).</li>
+          <li><strong>Month 1 (Large):</strong> Multi-user data model decision; edit flows; test suite for calculations and API.</li>
+        </ol>
+      </section>
+
+      <section class="card" id="quick-wins">
+        <h2>Quick wins (&lt; 1 day each)</h2>
+        <ul>
+          <li>Add <code>requireSession()</code> helper and call it at the top of every API handler.</li>
+          <li>Gate demo login behind <code>ENABLE_DEMO_LOGIN</code> environment variable.</li>
+          <li>Remove <code>maximumScale: 1</code> from viewport in <code>app/layout.tsx</code>.</li>
+          <li>Add 8 MB file size check in <code>app/api/receipts/route.ts</code>.</li>
+          <li>Show error banner when sheet fetch throws in dashboard/list pages.</li>
+          <li>Fix monthly report filtering to use ISO date string prefix instead of <code>Date</code> parsing.</li>
+          <li>Extract shared <code>parseSheetNumber</code> to one module.</li>
+          <li>Add failure toast when background receipt upload fails in <code>FuelEntryForm.tsx</code>.</li>
+        </ul>
+      </section>
+
+      <section class="card" id="before-production">
+        <h2>Before production checklist</h2>
+        <ul>
+          <li>☐ All API routes require authenticated session (except <code>/api/auth/*</code>)</li>
+          <li>☐ Demo credentials disabled in production environment</li>
+          <li>☐ <code>AUTH_SECRET</code>, Google OAuth redirect URIs, and service account sharing verified on target domain</li>
+          <li>☐ Google access token not exposed via client session endpoint</li>
+          <li>☐ Input validation (Zod) on all write endpoints</li>
+          <li>☐ Receipt upload size/type limits and rate limiting</li>
+          <li>☐ Multi-user / data isolation strategy documented (single-user OK if intentional)</li>
+          <li>☐ Error monitoring and logging configured</li>
+          <li>☐ Backup/export process for Google Sheet documented</li>
+          <li>☐ Core unit tests for fuel calculations and auth guards passing in CI</li>
+          <li>☐ Accessibility pass: zoom, charts, forms, delete confirmation</li>
+          <li>☐ Calendar event lifecycle complete (create → store ID → delete)</li>
+        </ul>
+      </section>
+
+      <section class="card" id="roadmap">
+        <h2>Prioritized roadmap</h2>
+
+        <div class="phase">
+          <h3>Phase 1 — Critical fixes</h3>
+          <ul>
+            <li>API authentication on GET and all mutations</li>
+            <li>Production demo login disable</li>
+            <li>Session token exposure review</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 2 — Reliability and data integrity</h3>
+          <ul>
+            <li>Calendar event ID column and cleanup</li>
+            <li>Zod validation and odometer monotonicity checks</li>
+            <li>Sheet write race mitigation or migration plan</li>
+            <li>Invalid row reporting instead of silent filter</li>
+            <li>Unit tests for calculations and parsers</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 3 — UX and product improvements</h3>
+          <ul>
+            <li>Edit/update flows for fuel, service, expenses (README roadmap item #1)</li>
+            <li>Filters and search by date, category, station</li>
+            <li>Receipt uploads for service and expenses</li>
+            <li>Accessible delete dialog and chart data tables</li>
+            <li>Service reminder notifications using <code>next_service_odometer</code></li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 4 — Scalability and long-term architecture</h3>
+          <ul>
+            <li>Per-user sheet mapping or Postgres/Supabase migration</li>
+            <li>Multi-vehicle support</li>
+            <li>PWA offline queue for entries</li>
+            <li>Observability, CI/CD, automated backups</li>
+            <li>Rate limiting and WAF rules on public deployment</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card" id="top-10">
+        <h2>10 most valuable next improvements</h2>
+        <ol>
+          <li><strong>Require authentication on every API route</strong> — closes the largest security hole.</li>
+          <li><strong>Disable demo login in production</strong> — prevents trivial account access.</li>
+          <li><strong>Add Zod validation to write endpoints</strong> — stops garbage/NaN data in Sheets.</li>
+          <li><strong>Implement edit flows for all entry types</strong> — highest user-value feature per README and <code>next_steps.md</code>.</li>
+          <li><strong>Fix calendar event ID persistence and deletion</strong> — stops orphan Google Calendar events.</li>
+          <li><strong>Keep OAuth tokens server-side only</strong> — reduces XSS blast radius.</li>
+          <li><strong>Add unit tests for <code>fuel-calculations.ts</code></strong> — protects core product metrics.</li>
+          <li><strong>Surface sheet load errors in the UI</strong> — avoids misleading empty states.</li>
+          <li><strong>Receipt upload hardening</strong> (size, magic bytes, failure toasts).</li>
+          <li><strong>Plan multi-user data isolation</strong> — required before sharing the app beyond a single driver.</li>
+        </ol>
+      </section>
+
+      <footer class="card" style="text-align:center; color: var(--muted); font-size: 0.88rem;">
+        <p>End of report · Car Manager repository static audit · No application source was modified.</p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

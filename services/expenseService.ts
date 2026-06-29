@@ -1,4 +1,4 @@
-import type { CreateExpenseEntryInput, ExpenseEntry } from "@/types/car";
+import type { CreateExpenseEntryInput, ExpenseEntry, UpdateExpenseEntryInput } from "@/types/car";
 
 async function getResponseMessage(response: Response, fallbackMessage: string) {
   try {
@@ -35,6 +35,24 @@ export async function createExpenseEntry(input: CreateExpenseEntryInput) {
   if (!response.ok) {
     throw new Error(
       await getResponseMessage(response, "Failed to create expense entry"),
+    );
+  }
+
+  return response.json();
+}
+
+export async function updateExpenseEntry(input: UpdateExpenseEntryInput) {
+  const response = await fetch("/api/expenses", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await getResponseMessage(response, "Failed to update expense entry"),
     );
   }
 
