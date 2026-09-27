@@ -1,5 +1,9 @@
 # Car Manager
 
+For LLMs and contributors, start with [AGENTS.md](AGENTS.md) and the
+[architecture map](docs/architecture.md) for the product pillar, code paths,
+data contracts, and current limitations.
+
 A mobile-first vehicle cost tracker built with Next.js, TypeScript, and Google Sheets.
 
 Car Manager helps a driver keep fuel fill-ups, service history, and other car expenses in one place through a lightweight app interface, while using Google Sheets as a simple, inspectable backend.
@@ -13,16 +17,19 @@ Instead of hiding everything behind an admin panel or database dashboard, the ap
 ## Features
 
 - Fuel tracking with date, odometer, liters, total cost, station, notes, and full-tank flag
-- Automatic fuel calculations such as price per liter, average consumption, and cost trends
+- Fuel totals, price-per-liter calculations, and recent fill-up cost trends
 - Service history tracking with mileage, cost, workshop/location, and next service odometer
 - Non-fuel expense tracking for insurance, tolls, parking, and other car-related costs
-- Dashboard with summary cards and visual charts for fuel consumption and spending distribution
+- Focused home screen with current odometer, quick entry actions, service reminder, and recent activity
 - Vehicle profile management for make, model, trim, year, plate, engine, and other details
 - Demo account for quick testing without connecting Google services
 - Google sign-in for Drive-connected features
 - Optional receipt photo upload to Google Drive for fuel entries
 - Monthly report export/print flow from the dashboard
 - Delete actions for entries
+- Edit/update flows, search, and list filters for fuel, service, and expenses
+- Service reminders and monthly/yearly reports with browser print/PDF export
+- Offline queue for new entries, with synchronization when connectivity returns
 - Automatic Google Sheets tab creation and header initialization
 - Optional Google Calendar event creation for fuel entries
 
@@ -45,7 +52,7 @@ Instead of hiding everything behind an admin panel or database dashboard, the ap
 2. Forms submit data to route handlers inside `app/api`.
 3. Route handlers validate and normalize the payload.
 4. Data is written into the corresponding Google Sheet tab.
-5. Server-rendered pages fetch fresh data from Google Sheets.
+5. Server-rendered pages read cached Google Sheets data; writes revalidate the relevant tags and paths.
 6. The dashboard calculates summaries and renders charts from typed entries.
 
 ## Entry Types
@@ -148,6 +155,13 @@ You can test the app locally with the built-in demo account:
 
 The demo account is read-only and uses mock data.
 
+For temporary local access without login, set `AUTH_BYPASS=true` in `.env.local`
+and restart `npm run dev`. This works only with `NODE_ENV=development`; production
+always requires login. Remove the flag or set it to `false` and restart to restore
+login locally. This mode reads and writes the configured real Google Sheet using
+the service account; it does not provide Google OAuth access for receipt uploads.
+Keep the development server local (e.g. `npm run dev -- --hostname 127.0.0.1`).
+
 ## Google Setup
 
 ### Google Sheets
@@ -221,7 +235,7 @@ components/
   ServiceEntryForm.tsx
   VehicleProfileForm.tsx
   ShareReportButton.tsx
-  ConsumptionBarChart.tsx
+  FuelCostBarChart.tsx
   CostDonutChart.tsx
   DeleteEntryButton.tsx
 
@@ -251,16 +265,13 @@ public/
 ## Known Limitations
 
 - Google Sheets is practical for an MVP, but it is not a replacement for a full relational database
-- Edit/update flows for entries are not implemented yet
+- Offline synchronization covers new entries; retries after partial success can create duplicates
 - Receipt uploads are currently connected to fuel entries only
-- Multi-user data separation is still limited in scope
+- Non-demo users share one configured Sheet and one vehicle profile; there is no per-user data isolation
 - Production deployment would need stronger operational hardening around secrets and Google setup
 
 ## Roadmap
 
-- Add edit/update flows for all entry types
-- Add filters by date, category, and mileage
-- Expand reporting with monthly and yearly summaries
 - Improve export and backup options
 - Add stronger multi-user support
 - Improve attachment handling across more forms
