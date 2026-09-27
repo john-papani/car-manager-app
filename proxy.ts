@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { isLocalAuthBypassEnabled } from "@/lib/app-session";
 
 const PUBLIC_PATHS = ["/login"];
 
 export default auth((req) => {
+  if (isLocalAuthBypassEnabled()) {
+    return NextResponse.next();
+  }
+
   const pathname = req.nextUrl.pathname;
   const isLoggedIn = Boolean(req.auth?.user);
   const isPublicPath = PUBLIC_PATHS.includes(pathname);

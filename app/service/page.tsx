@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { auth } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 
 import DataHealthBanner from "@/components/DataHealthBanner";
 

@@ -9,10 +9,6 @@ import {
   filterFuelEntries,
   type EntryFilterState,
 } from "@/lib/entry-filters";
-import {
-  calculateConsumption,
-  calculateCostPerKm,
-} from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
 type FuelEntryListProps = {
@@ -32,22 +28,6 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
     [sortedEntries, filters],
   );
 
-  const previousById = useMemo(() => {
-    const chronologicalEntries = [...entries].sort(
-      (left, right) => left.odometer - right.odometer,
-    );
-    const map = new Map<string, FuelEntry | undefined>();
-
-    for (let index = 0; index < chronologicalEntries.length; index += 1) {
-      map.set(
-        chronologicalEntries[index].id,
-        index > 0 ? chronologicalEntries[index - 1] : undefined,
-      );
-    }
-
-    return map;
-  }, [entries]);
-
   const stations = useMemo(
     () => entries.map((entry) => entry.station),
     [entries],
@@ -57,7 +37,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
     return (
       <EmptyState
         title="Δεν έχεις ακόμα γεμίσματα"
-        description="Πρόσθεσε το πρώτο για να ξεκινήσουν τα στατιστικά κατανάλωσης."
+        description="Πρόσθεσε το πρώτο για να οργανώσεις το ιστορικό καυσίμων."
         actionHref="/fuel/new"
         actionLabel="Πρώτο γέμισμα"
       />
@@ -80,10 +60,6 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
           </div>
         ) : (
           filteredEntries.map((entry) => {
-            const previousEntry = previousById.get(entry.id);
-            const consumption = calculateConsumption(entry, previousEntry);
-            const costPerKm = calculateCostPerKm(entry, previousEntry);
-
             return (
               <article
                 key={entry.id}
@@ -114,7 +90,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
                   {entry.station || "Χωρίς πρατήριο"}
                 </p>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-4 grid grid-cols-2 gap-2 text-center">
                   <div className="rounded-[1.35rem] bg-white/70 p-3">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                       Km
@@ -131,17 +107,9 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
                       {entry.liters.toFixed(2)}
                     </p>
                   </div>
-                  <div className="rounded-[1.35rem] bg-[var(--accent-soft)]/50 p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--accent-strong)]">
-                      L/100km
-                    </p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
-                      {consumption ?? "—"}
-                    </p>
-                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end gap-3 text-sm text-[var(--muted)]">
+                <div className="mt-4 flex items-center justify-end text-sm text-[var(--muted)]">
                   {entry.receipt_url ? (
                     <a
                       href={entry.receipt_url}
@@ -152,7 +120,6 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
                       Απόδειξη
                     </a>
                   ) : null}
-                  <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
                 </div>
               </article>
             );

@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  calculateConsumption,
-  calculateCostPerKm,
-  calculateFuelStats,
-} from "@/lib/fuel-calculations";
+import { calculateFuelStats } from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
 const baseEntry = (
@@ -18,49 +14,33 @@ const baseEntry = (
   ...overrides,
 });
 
-describe("fuel-calculations", () => {
-  it("returns null consumption when previous entry is missing", () => {
-    const current = baseEntry({ id: "a", odometer: 1000, liters: 40 });
-
-    expect(calculateConsumption(current)).toBeNull();
-  });
-
-  it("returns null consumption when tank is not full", () => {
-    const previous = baseEntry({ id: "a", odometer: 1000, liters: 40 });
-    const current = baseEntry({
-      id: "b",
-      odometer: 1200,
-      liters: 30,
-      is_full_tank: false,
+describe("calculateFuelStats", () => {
+  it("returns zero values for an empty history", () => {
+    expect(calculateFuelStats([])).toEqual({
+      totalCost: 0,
+      totalLiters: 0,
+      averagePricePerLiter: 0,
+      latestOdometer: 0,
     });
-
-    expect(calculateConsumption(current, previous)).toBeNull();
   });
 
-  it("calculates consumption for full tank intervals", () => {
-    const previous = baseEntry({ id: "a", odometer: 1000, liters: 40 });
-    const current = baseEntry({ id: "b", odometer: 1200, liters: 30 });
-
-    expect(calculateConsumption(current, previous)).toBe(15);
-  });
-
-  it("calculates cost per km", () => {
-    const previous = baseEntry({ id: "a", odometer: 1000, liters: 40, total_cost: 70 });
-    const current = baseEntry({ id: "b", odometer: 1100, liters: 35, total_cost: 63 });
-
-    expect(calculateCostPerKm(current, previous)).toBe(0.63);
-  });
-
-  it("summarizes fuel stats", () => {
+  it("includes every entry regardless of full-tank status", () => {
     const entries = [
       baseEntry({ id: "a", odometer: 1000, liters: 40, total_cost: 70 }),
-      baseEntry({ id: "b", odometer: 1200, liters: 30, total_cost: 60 }),
+      baseEntry({
+        id: "b",
+        odometer: 1200,
+        liters: 30,
+        total_cost: 60,
+        is_full_tank: false,
+      }),
     ];
 
-    const stats = calculateFuelStats(entries);
-
-    expect(stats.totalCost).toBe(130);
-    expect(stats.totalLiters).toBe(70);
-    expect(stats.consumptionSamples).toBe(1);
+    expect(calculateFuelStats(entries)).toEqual({
+      totalCost: 130,
+      totalLiters: 70,
+      averagePricePerLiter: 1.857,
+      latestOdometer: 1200,
+    });
   });
 });

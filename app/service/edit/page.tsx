@@ -4,7 +4,7 @@ import EntryPageHeader from "@/components/EntryPageHeader";
 import PageMain from "@/components/PageMain";
 import PageSkeleton from "@/components/PageSkeleton";
 import ServiceEntryForm from "@/components/ServiceEntryForm";
-import { auth } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import { getCurrentServiceEntries } from "@/lib/current-user-data";
 
 type EditServicePageProps = {

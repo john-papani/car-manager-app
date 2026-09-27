@@ -6,7 +6,7 @@ type AppShellProps = {
 const featureCards = [
   {
     title: "Fuel tracking",
-    description: "Consumption, cost and refill history.",
+    description: "Fuel cost and refill history.",
   },
   {
     title: "Service history",

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
-import { auth, signIn } from "@/auth";
+import { signIn } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import AuthSubmitButton from "@/components/AuthSubmitButton";
 import { isDemoLoginEnabled } from "@/lib/demo-mode";
 

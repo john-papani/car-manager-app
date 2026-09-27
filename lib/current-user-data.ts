@@ -1,5 +1,5 @@
 import type { Session } from "next-auth";
-import { auth } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import { isDemoSession } from "@/lib/demo-mode";
 import { getCachedRows } from "@/lib/sheets";
 import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";

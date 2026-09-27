@@ -4,7 +4,7 @@ import EntryPageHeader from "@/components/EntryPageHeader";
 import FuelEntryForm from "@/components/FuelEntryForm";
 import PageMain from "@/components/PageMain";
 import PageSkeleton from "@/components/PageSkeleton";
-import { auth } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import { getCurrentFuelEntries } from "@/lib/current-user-data";
 
 type EditFuelPageProps = {

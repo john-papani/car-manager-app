@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
-import { auth } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
 
 export type SessionAuthResult =

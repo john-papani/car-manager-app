@@ -90,7 +90,7 @@ export const demoFuelEntries: FuelEntry[] = [
     price_per_liter: 1.81,
     station: "Shell Ethniki Odos",
     is_full_tank: true,
-    notes: "Mostly highway driving, very stable consumption.",
+    notes: "Mostly highway driving.",
     receipt_file_id: "",
     receipt_url: "",
     created_at: "2026-02-22T17:08:00.000Z",

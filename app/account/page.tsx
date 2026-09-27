@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { auth, signOut } from "@/auth";
+import { signOut } from "@/auth";
+import { getAppSession as auth } from "@/lib/app-session";
 import { getCurrentVehicleProfile } from "@/lib/current-user-data";
 import { isDemoSession } from "@/lib/demo-mode";
 import PageHeader from "@/components/PageHeader";
@@ -19,6 +20,7 @@ async function AccountContent() {
   const isGoogleAccount =
     session.provider === "google" && session.error !== "RefreshAccessTokenError";
   const isDemoAccount = isDemoSession(session);
+  const isLocalAccount = session.user.id === "local-dev";
   let profile = null;
 
   try {
@@ -46,7 +48,9 @@ async function AccountContent() {
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
               {isGoogleAccount
                 ? "Συνδεδεμένος με Google — έτοιμος για Drive και αποδείξεις."
-                : "Συνδεδεμένος με demo λογαριασμό."}
+                : isLocalAccount
+                  ? "Τοπική πρόσβαση χωρίς login. Οι αποδείξεις Drive απαιτούν σύνδεση Google."
+                  : "Συνδεδεμένος με demo λογαριασμό."}
             </p>
             {isDemoAccount ? (
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
@@ -56,12 +60,12 @@ async function AccountContent() {
             ) : null}
           </div>
           <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-            {isGoogleAccount ? "Google" : "Demo"}
+            {isLocalAccount ? "Τοπικά" : isGoogleAccount ? "Google" : "Demo"}
           </span>
         </div>
 
         <div className="mt-5 space-y-3">
-          <form
+          {!isLocalAccount && <form
             action={async () => {
               "use server";
               await signOut({ redirectTo: "/login" });
@@ -73,7 +77,7 @@ async function AccountContent() {
             >
               Αποσύνδεση
             </button>
-          </form>
+          </form>}
 
           <Link
             href="/"

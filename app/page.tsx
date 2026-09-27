@@ -1,25 +1,19 @@
-import { Suspense } from "react";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { Suspense } from "react";
+import { getAppSession as auth } from "@/lib/app-session";
+import DataHealthBanner from "@/components/DataHealthBanner";
+import DataLoadError from "@/components/DataLoadError";
+import CostDonutChart from "@/components/CostDonutChart";
+import FuelCostBarChart from "@/components/FuelCostBarChart";
+import PageMain from "@/components/PageMain";
+import PageSkeleton from "@/components/PageSkeleton";
+import ServiceReminderBanner from "@/components/ServiceReminderBanner";
 import {
-  getCurrentExpenseEntriesWithHealth,
   getCurrentFuelEntriesWithHealth,
+  getCurrentExpenseEntriesWithHealth,
   getCurrentServiceEntriesWithHealth,
   getCurrentVehicleProfile,
 } from "@/lib/current-user-data";
-import DataHealthBanner from "@/components/DataHealthBanner";
-import DataLoadError from "@/components/DataLoadError";
-import {
-  calculateFuelStats,
-  getRecentConsumptionTrend,
-} from "@/lib/fuel-calculations";
-import StatCard from "@/components/StatCard";
-import PageMain from "@/components/PageMain";
-import PageSkeleton from "@/components/PageSkeleton";
-import ConsumptionBarChart from "@/components/ConsumptionBarChart";
-import CostDonutChart from "@/components/CostDonutChart";
-import ServiceReminderBanner from "@/components/ServiceReminderBanner";
-import ShareReportButton from "@/components/ShareReportButton";
 import {
   getCurrentOdometer,
   getServiceReminder,
@@ -30,6 +24,17 @@ import type {
   ServiceEntry,
   VehicleProfile,
 } from "@/types/car";
+
+const dateFormatter = new Intl.DateTimeFormat("el-GR", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function formatDate(date: string) {
+  return dateFormatter.format(new Date(`${date}T00:00:00Z`));
+}
 
 async function DashboardContent() {
   const session = await auth();
@@ -57,222 +62,186 @@ async function DashboardContent() {
       expenseResult.invalidRowCount +
       serviceResult.invalidRowCount;
   } catch (error) {
-    console.error("Failed to load dashboard data", error);
+    console.error("Failed to load home screen", error);
     loadFailed = true;
   }
 
-  const stats = calculateFuelStats(fuelEntries);
-  const latestEntry = [...fuelEntries].sort((a, b) => b.odometer - a.odometer)[0];
-  const consumptionTrend = getRecentConsumptionTrend(fuelEntries);
+  const latestFuel = [...fuelEntries].sort(
+    (left, right) => right.odometer - left.odometer,
+  )[0];
+  const latestService = [...serviceEntries].sort(
+    (left, right) => right.odometer - left.odometer,
+  )[0];
+  const currentOdometer = getCurrentOdometer(fuelEntries, serviceEntries);
+  const serviceReminder = getServiceReminder(serviceEntries, currentOdometer);
+  const fuelTotal = fuelEntries.reduce((sum, entry) => sum + entry.total_cost, 0);
   const serviceTotal = serviceEntries.reduce(
     (sum, entry) => sum + entry.total_cost,
-    0
+    0,
   );
-  const expensesTotal = expenseEntries.reduce(
+  const expenseTotal = expenseEntries.reduce(
     (sum, entry) => sum + entry.total_cost,
-    0
+    0,
   );
-  const totalSpend = stats.totalCost + serviceTotal + expensesTotal;
+  const totalCost = fuelTotal + serviceTotal + expenseTotal;
   const vehicleTitle = vehicleProfile
     ? [vehicleProfile.make, vehicleProfile.model, vehicleProfile.trim]
         .filter(Boolean)
         .join(" ")
     : "Το όχημά σου";
-  const currentOdometer = getCurrentOdometer(fuelEntries, serviceEntries);
-  const serviceReminder = getServiceReminder(serviceEntries, currentOdometer);
 
   return (
     <PageMain>
-      <section className="relative overflow-hidden rounded-[2rem] bg-[linear-gradient(160deg,#102b34_0%,#214955_52%,#ca6f3d_150%)] p-5 text-white shadow-[0_24px_80px_rgb(18_49_59_/_0.28)]">
-        <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-12 left-8 h-36 w-36 rounded-full bg-[rgb(255_214_183_/_0.12)] blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl bg-[linear-gradient(155deg,#102b34_0%,#214955_72%,#8f5538_145%)] p-4 text-white shadow-[0_20px_56px_rgb(18_49_59_/_0.22)] min-[360px]:p-5">
+        <div
+          aria-hidden="true"
+          className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-white/10 blur-3xl"
+        />
 
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
-              Car Manager
-            </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight leading-tight">
-              {vehicleTitle}
-            </h1>
+        <div className="relative min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/55">
+                Car Manager
+              </p>
+              <h1 className="mt-1 break-words text-2xl font-semibold leading-tight tracking-tight min-[360px]:text-3xl">
+                {vehicleTitle}
+              </h1>
+            </div>
+
+            {vehicleProfile?.license_plate ? (
+              <span className="shrink-0 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide">
+                {vehicleProfile.license_plate}
+              </span>
+            ) : (
+              <Link
+                href="/account"
+                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold"
+              >
+                Προφίλ
+              </Link>
+            )}
           </div>
-          <ShareReportButton
-            vehicle={vehicleTitle}
-            fuelEntries={fuelEntries.map((entry) => ({
-              date: entry.date,
-              liters: entry.liters,
-              total_cost: entry.total_cost,
-              odometer: entry.odometer,
-            }))}
-            expenseEntries={expenseEntries.map((entry) => ({
-              date: entry.date,
-              total_cost: entry.total_cost,
-            }))}
-            serviceEntries={serviceEntries.map((entry) => ({
-              date: entry.date,
-              total_cost: entry.total_cost,
-            }))}
-          />
-        </div>
 
-        <p className="relative mt-3 max-w-[18rem] text-sm font-medium leading-relaxed text-white/80">
-          Όλα τα κόστη και τα γεμίσματα σε μία καθαρή εικόνα.
-        </p>
+          <div className="mt-5">
+            <p className="text-xs font-medium text-white/60">Τρέχον κοντέρ</p>
+            <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight min-[360px]:text-4xl">
+              {currentOdometer > 0
+                ? `${currentOdometer.toLocaleString("el-GR")} km`
+                : "— km"}
+            </p>
+          </div>
 
-        <div className="relative mt-6 grid grid-cols-2 gap-3">
-          <Link
-            href="/fuel/new"
-            className="flex items-center justify-center rounded-2xl bg-white px-4 py-3.5 text-center text-sm font-bold !text-[var(--navy)] shadow-lg active:scale-95"
-          >
-            + Γέμισμα
-          </Link>
-
-          <Link
-            href="/expenses/new"
-            className="flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-sm font-bold text-white backdrop-blur-md active:scale-95"
-          >
-            + Έξοδο
-          </Link>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <Link
+              href="/fuel/new"
+              className="flex min-h-12 items-center justify-center rounded-xl bg-white px-2 py-3 text-center text-xs font-bold !text-[var(--navy)] min-[360px]:text-sm"
+            >
+              + Καύσιμα
+            </Link>
+            <Link
+              href="/service/new"
+              className="flex min-h-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center text-xs font-bold min-[360px]:text-sm"
+            >
+              + Service
+            </Link>
+            <Link
+              href="/expenses/new"
+              className="flex min-h-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center text-xs font-bold min-[360px]:text-sm"
+            >
+              + Έξοδο
+            </Link>
+          </div>
         </div>
       </section>
 
       {loadFailed ? <DataLoadError /> : null}
       <DataHealthBanner invalidRowCount={invalidRowCount} />
 
-      {serviceReminder ? (
-        <ServiceReminderBanner reminder={serviceReminder} />
-      ) : null}
+      {serviceReminder ? <ServiceReminderBanner reminder={serviceReminder} /> : null}
 
-      <section className="mt-5 grid grid-cols-2 gap-3">
-        <StatCard
-          label="Συνολικό κόστος"
-          value={`${stats.totalCost.toFixed(2)} €`}
-          tone="accent"
-        />
-        <StatCard label="Συνολικά λίτρα" value={`${stats.totalLiters.toFixed(1)} L`} />
-        <StatCard
-          label="Μέση κατανάλωση"
-          value={
-            stats.consumptionSamples > 0
-              ? `${stats.averageConsumption.toFixed(2)} L/100km`
-              : "—"
-          }
-        />
-        <StatCard
-          label="Μέση τιμή / λίτρο"
-          value={`${stats.averagePricePerLiter.toFixed(3)}€/L`}
-        />
-      </section>
-
-      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Κατανάλωση
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Μέση τιμή από τα τελευταία γεμίσματα full tank.
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-              Μέσος όρος
-            </p>
-            <p className="mt-1 text-xl font-semibold text-[var(--foreground)]">
-              {stats.consumptionSamples > 0
-                ? `${stats.averageConsumption.toFixed(2)}`
-                : "—"}
-            </p>
-            <p className="text-xs text-[var(--muted)]">L/100km</p>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <ConsumptionBarChart points={consumptionTrend} />
-        </div>
-      </section>
-
-      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Κατανομή κόστους
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Πού φεύγουν τα περισσότερα χρήματα συνολικά.
-            </p>
-          </div>
-          <Link
-            href="/expenses"
-            className="text-sm font-semibold text-[var(--accent-strong)]"
-          >
-            Έξοδα
+      <section className="mt-5 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--card-strong)] shadow-[var(--surface-shadow)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3.5">
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Πρόσφατα</h2>
+          <Link href="/fuel" className="text-xs font-semibold text-[var(--accent-strong)]">
+            Ιστορικό
           </Link>
         </div>
 
-        <div className="mt-4">
-          <CostDonutChart
-            total={totalSpend}
-            segments={[
-              { label: "Καύσιμα", value: stats.totalCost, color: "#ca6f3d" },
-              { label: "Service", value: serviceTotal, color: "#16313a" },
-              { label: "Λοιπά έξοδα", value: expensesTotal, color: "#d8a27a" },
-            ]}
-          />
-        </div>
+        {latestFuel || latestService ? (
+          <div className="divide-y divide-[var(--line)]">
+            {latestFuel ? (
+              <Link href="/fuel" className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">Τελευταίο γέμισμα</p>
+                  <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                    {formatDate(latestFuel.date)}{latestFuel.station ? ` · ${latestFuel.station}` : ""}
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                  {latestFuel.total_cost.toLocaleString("el-GR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}€
+                </p>
+              </Link>
+            ) : null}
+
+            {latestService ? (
+              <Link href="/service" className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">Τελευταίο service</p>
+                  <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                    {formatDate(latestService.date)} · {latestService.service_type}
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm text-[var(--muted)]" aria-hidden="true">›</span>
+              </Link>
+            ) : null}
+          </div>
+        ) : (
+          <div className="px-4 py-5">
+            <p className="text-sm leading-6 text-[var(--muted)]">
+              Πρόσθεσε την πρώτη καταχώρηση για να εμφανιστεί εδώ.
+            </p>
+          </div>
+        )}
       </section>
 
-      <section className="mt-5 rounded-[2rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)] backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">
-            Τελευταίο γέμισμα
-          </h2>
-          <Link
-            href="/fuel"
-            className="text-sm font-semibold text-[var(--accent-strong)]"
-          >
+      <section className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow)]">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
+              Τελευταία γεμίσματα
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-[var(--foreground)]">
+              Κόστος καυσίμων
+            </h2>
+          </div>
+          <Link href="/fuel" className="text-xs font-semibold text-[var(--accent-strong)]">
             Όλα
           </Link>
         </div>
+        <FuelCostBarChart entries={fuelEntries} />
+      </section>
 
-        {latestEntry ? (
-          <div className="mt-4">
-            <p className="text-3xl font-semibold tracking-tight text-[var(--foreground)]">
-              {latestEntry.total_cost.toFixed(2)}€
-            </p>
-            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-              {latestEntry.date} · {latestEntry.liters.toFixed(2)} L ·{" "}
-              {latestEntry.odometer.toLocaleString("el-GR")} km
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <div className="inline-flex rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-                {latestEntry.station || "Χωρίς πρατήριο"}
-              </div>
-              {latestEntry.receipt_url ? (
-                <a
-                  href={latestEntry.receipt_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex rounded-full border border-[var(--line)] bg-white px-3 py-1 text-xs font-semibold text-[var(--foreground)]"
-                >
-                  Απόδειξη
-                </a>
-              ) : null}
-            </div>
-          </div>
-        ) : (
-          <>
-            <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-              Πρόσθεσε το πρώτο γέμισμα για να εμφανιστούν τα στατιστικά.
-            </p>
-            <Link
-              href="/fuel/new"
-              className="mt-4 inline-flex rounded-full bg-[var(--navy)] px-4 py-2.5 text-sm font-semibold !text-white"
-            >
-              Πρώτο γέμισμα
-            </Link>
-          </>
-        )}
+      <section className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4 shadow-[var(--surface-shadow)]">
+        <div className="mb-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
+            Συνολική εικόνα
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-[var(--foreground)]">
+            Πού πηγαίνουν τα χρήματα
+          </h2>
+        </div>
+        <CostDonutChart
+          total={totalCost}
+          segments={[
+            { label: "Καύσιμα", value: fuelTotal, color: "#ca6f3d" },
+            { label: "Service", value: serviceTotal, color: "#16313a" },
+            { label: "Έξοδα", value: expenseTotal, color: "#d8a27a" },
+          ]}
+        />
       </section>
     </PageMain>
   );

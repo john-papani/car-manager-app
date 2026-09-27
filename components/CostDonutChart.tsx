@@ -71,11 +71,11 @@ export default function CostDonutChart({
 
   return (
     <div
-      className="flex items-center gap-4 rounded-[1.6rem] bg-white/50 p-4"
+      className="flex flex-col items-center gap-4 rounded-2xl bg-[linear-gradient(180deg,rgb(255_255_255_/_0.82),rgb(242_233_220_/_0.45))] p-4 min-[390px]:flex-row"
       role="img"
       aria-label="Γράφημα κατανομής κόστους"
     >
-      <div className="relative h-36 w-36 shrink-0">
+      <div className="relative h-32 w-32 shrink-0 min-[390px]:h-36 min-[390px]:w-36">
         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
           <circle
             cx="60"
@@ -85,16 +85,28 @@ export default function CostDonutChart({
             stroke="rgb(22 49 58 / 0.08)"
             strokeWidth="16"
           />
-          {arcSegments.map((segment) => (
-            <path
-              key={segment.label}
-              d={describeArc(60, 60, 42, segment.startAngle, segment.endAngle)}
-              fill="none"
-              stroke={segment.color}
-              strokeWidth="16"
-              strokeLinecap="round"
-            />
-          ))}
+          {arcSegments.map((segment) =>
+            segment.endAngle - segment.startAngle >= 359.99 ? (
+              <circle
+                key={segment.label}
+                cx="60"
+                cy="60"
+                r="42"
+                fill="none"
+                stroke={segment.color}
+                strokeWidth="16"
+              />
+            ) : (
+              <path
+                key={segment.label}
+                d={describeArc(60, 60, 42, segment.startAngle, segment.endAngle)}
+                fill="none"
+                stroke={segment.color}
+                strokeWidth="16"
+                strokeLinecap="round"
+              />
+            ),
+          )}
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -107,7 +119,7 @@ export default function CostDonutChart({
         </div>
       </div>
 
-      <div className="flex-1 space-y-3">
+      <div className="w-full flex-1 space-y-3">
         {filteredSegments.map((segment) => {
           const percentage = total > 0 ? (segment.value / total) * 100 : 0;
 
@@ -117,11 +129,11 @@ export default function CostDonutChart({
                 className="h-3 w-3 rounded-full"
                 style={{ backgroundColor: segment.color }}
               />
-              <div className="flex flex-1 items-center justify-between gap-3 text-sm">
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-sm">
                 <span className="font-medium text-[var(--foreground)]">
                   {segment.label}
                 </span>
-                <span className="text-[var(--muted)]">
+                <span className="shrink-0 text-xs tabular-nums text-[var(--muted)] min-[360px]:text-sm">
                   {segment.value.toFixed(2)}€ · {percentage.toFixed(0)}%
                 </span>
               </div>
