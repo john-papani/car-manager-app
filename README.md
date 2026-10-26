@@ -1,14 +1,21 @@
 # Car Manager
 
-A mobile-first vehicle cost tracker built with Next.js, TypeScript, and Google Sheets.
+A mobile-first vehicle cost tracker built with Next.js, TypeScript, and Supabase.
 
-Car Manager helps a driver keep fuel fill-ups, service history, and other car expenses in one place through a lightweight app interface, while using Google Sheets as a simple, inspectable backend.
+Car Manager helps a driver keep fuel fill-ups, service history, and other car expenses in one place through a lightweight app interface, while using Supabase for structured storage, per-user separation, and easier scaling than the original Google Sheets MVP.
 
 ## Overview
 
-This project was built as a practical MVP for tracking recurring vehicle costs without setting up a traditional database.
+This project started as a Google Sheets MVP and now uses Supabase as the main backend for application data.
 
-Instead of hiding everything behind an admin panel or database dashboard, the app stores structured data in Google Sheets, making it easy to review, maintain, and back up entries outside the app as well.
+The UI and route structure stay lightweight, but the persistence layer is now better suited for multi-user data, more reliable querying, and future growth.
+
+## Version History
+
+- `v1`: application data was stored in Google Sheets
+- `current`: application data is stored in Supabase
+
+Because of that backend change, existing data from the Google Sheets version needs a one-time migration into Supabase for older installs.
 
 ## Features
 
@@ -18,12 +25,11 @@ Instead of hiding everything behind an admin panel or database dashboard, the ap
 - Non-fuel expense tracking for insurance, tolls, parking, and other car-related costs
 - Dashboard with summary cards and visual charts for fuel consumption and spending distribution
 - Vehicle profile management for make, model, trim, year, plate, engine, and other details
-- Demo account for quick testing without connecting Google services
-- Google sign-in for Drive-connected features
-- Optional receipt photo upload to Google Drive for fuel entries
+- Email/password authentication through Supabase Auth
+- Supabase-backed fuel, service, expense, and vehicle profile storage
+- Optional receipt photo upload through Supabase Storage
 - Monthly report export/print flow from the dashboard
 - Delete actions for entries
-- Automatic Google Sheets tab creation and header initialization
 - Optional Google Calendar event creation for fuel entries
 
 ## Tech Stack
@@ -32,20 +38,19 @@ Instead of hiding everything behind an admin panel or database dashboard, the ap
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- Auth.js / NextAuth
-- Google Sheets API
-- Google Drive API
+- Supabase SSR Auth
+- Supabase
 - Google Calendar API
 - UUID
 - ESLint
 
 ## How It Works
 
-1. The user signs in with either the demo account or Google.
+1. The user signs in with Supabase Auth.
 2. Forms submit data to route handlers inside `app/api`.
 3. Route handlers validate and normalize the payload.
-4. Data is written into the corresponding Google Sheet tab.
-5. Server-rendered pages fetch fresh data from Google Sheets.
+4. Data is written into Supabase tables.
+5. Server-rendered pages fetch fresh data from Supabase.
 6. The dashboard calculates summaries and renders charts from typed entries.
 
 ## Entry Types
@@ -112,23 +117,15 @@ npm install
 ### 2. Create `.env.local`
 
 ```env
-GOOGLE_CLIENT_EMAIL="your-service-account@project.iam.gserviceaccount.com"
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_SHEET_ID="your_google_sheet_id"
-
-# Optional for receipt uploads
-GOOGLE_DRIVE_RECEIPTS_FOLDER_ID="your_drive_folder_id"
+NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="your_supabase_publishable_key"
+SUPABASE_SERVICE_ROLE_KEY="your_supabase_service_role_key"
+SUPABASE_RECEIPTS_BUCKET="fuel-receipts"
 
 # Optional for fuel calendar events
 GOOGLE_CALENDAR_ID="your_calendar_id"
-
-# Required for Google sign-in
-AUTH_GOOGLE_ID="your_google_oauth_client_id"
-AUTH_GOOGLE_SECRET="your_google_oauth_client_secret"
-AUTH_SECRET="your_auth_secret"
-
-# Demo login (enabled in development by default; set to "true" to force on, "false" to force off)
-ENABLE_DEMO_LOGIN="true"
+GOOGLE_CLIENT_EMAIL="your-service-account@project.iam.gserviceaccount.com"
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
 ### 3. Run the development server
@@ -139,51 +136,84 @@ npm run dev
 
 Open `http://localhost:3000`
 
-## Demo Login
+## Supabase Setup
 
-You can test the app locally with the built-in demo account:
+### 1. Create the project
 
-- Username: `user`
-- Password: `user`
+- Create a new project in Supabase
+- Copy the project URL
+- Copy the publishable key
+- Copy the service role key
 
-The demo account is read-only and uses mock data.
+### 2. Run the schema
 
-## Google Setup
+- Open the SQL Editor in Supabase
+- Run [`supabase/schema.sql`](supabase/schema.sql)
+- Confirm that the tables and the `fuel-receipts` storage bucket were created
 
-### Google Sheets
+### 3. Configure environment variables
 
-- Create a Google Cloud project
-- Enable the Google Sheets API
-- Create a service account
-- Generate a JSON key
-- Share your target Google Sheet with the service account email as Editor
+- Add `NEXT_PUBLIC_SUPABASE_URL`
+- Add `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- Add `SUPABASE_SERVICE_ROLE_KEY`
+- Optionally override `SUPABASE_RECEIPTS_BUCKET`
 
-### Google Drive
+### 4. Enable email/password auth
 
-Used for optional receipt uploads.
+- Open `Authentication -> Providers` in Supabase
+- Enable `Email`
+- Decide whether you want `Confirm email` on or off
 
-- Enable the Google Drive API
-- Create a Drive folder
-- Add its ID to `GOOGLE_DRIVE_RECEIPTS_FOLDER_ID`
-- Sign in with a Google account that has access to that folder
+### 5. Create the first user
+
+You have two options:
+
+- Easiest: run the app and create the user from `/login`
+- Or create a user manually in `Authentication -> Users`
 
 ### Google Calendar
 
-Used for optional fuel-entry calendar events.
+Still optional and used only for fuel-entry calendar events.
 
 - Enable the Google Calendar API
 - Set `GOOGLE_CALENDAR_ID`
 
-### Google OAuth
+## Data Migration
 
-Used for Google sign-in inside the app.
+This migration exists because the original `v1` app used Google Sheets, while the current version uses Supabase.
 
-- Create OAuth credentials for a Web application
-- Add this redirect URI in development:
+To move the existing Google Sheets entries into Supabase:
 
-```text
-http://localhost:3000/api/auth/callback/google
+1. Create the target user in Supabase Auth first. Use that user's email with the command below.
+2. Share the Google spreadsheet with the service account in `GOOGLE_CLIENT_EMAIL` and confirm it has tabs named `fuel_entries`, `service_entries`, `expense_entries`, and `vehicle_profile`.
+3. Keep these env vars filled:
+   - `GOOGLE_CLIENT_EMAIL`
+   - `GOOGLE_PRIVATE_KEY`
+   - `GOOGLE_SHEET_ID`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+4. Preview and validate the rows without writing:
+
+```bash
+npm run migrate:sheets-to-supabase -- --owner-email=your@email.com
 ```
+
+5. Check the printed counts, then import:
+
+```bash
+npm run migrate:sheets-to-supabase -- --owner-email=your@email.com --apply
+```
+
+The script resolves the email to the Supabase Auth user ID. Running it again updates rows with the same IDs; take a database backup first if you have edited any imported rows in the app.
+
+The script migrates:
+
+- fuel entries
+- service entries
+- expense entries
+- vehicle profile
+
+It does **not** migrate uploaded files. Existing Google Drive receipt links remain in the records when available; the files stay in Drive and still need appropriate sharing permissions.
 
 ## Available Scripts
 
@@ -193,6 +223,7 @@ npm run build
 npm run start
 npm run lint
 npm run test
+npm run migrate:sheets-to-supabase -- --owner-email=your@email.com --apply
 ```
 
 ## Project Structure
@@ -200,7 +231,6 @@ npm run test
 ```text
 app/
   api/
-    auth/[...nextauth]/
     drive-check/
     expenses/
     fuel/
@@ -227,10 +257,8 @@ components/
 
 lib/
   google.ts
-  sheets.ts
   calendar.ts
   current-user-data.ts
-  demo-mode.ts
   fuel-calculations.ts
 
 services/
@@ -241,20 +269,22 @@ services/
 
 types/
   car.ts
-  next-auth.d.ts
 
 public/
   manifest.json
   car-icon.svg
 ```
 
+## Migration Notes
+
+- Main app data now lives in Supabase, not Google Sheets
+- Existing Google Sheets data moves with `npm run migrate:sheets-to-supabase`
+- Calendar integration still uses Google service-account credentials if you want fuel events
+
 ## Known Limitations
 
-- Google Sheets is practical for an MVP, but it is not a replacement for a full relational database
-- Edit/update flows for entries are not implemented yet
 - Receipt uploads are currently connected to fuel entries only
-- Multi-user data separation is still limited in scope
-- Production deployment would need stronger operational hardening around secrets and Google setup
+- Production deployment should keep `SUPABASE_SERVICE_ROLE_KEY` server-side only
 
 ## Roadmap
 
