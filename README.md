@@ -298,6 +298,14 @@ public/
 - Receipt uploads are currently connected to fuel entries only
 - Production deployment should keep `SUPABASE_SERVICE_ROLE_KEY` server-side only
 
+## Supabase keep-alive cron
+
+Vercel runs `/api/cron/keep-alive` once daily at 06:00 UTC (Hobby may run at any time during that hour). The endpoint reads at most one `vehicle_profiles.id` row; it never modifies data. Supabase Free project pausing is based on database activity, so this reduces the chance of an inactivity pause but does not guarantee prevention.
+
+In Vercel **Settings → Environment Variables**, configure `CRON_SECRET` as a long random string for **Production**. Keep the existing `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`) set for Production. The service-role/secret key must stay server-side. Redeploy after setting the variables; Vercel schedules crons only on production deployments.
+
+After deployment, check **Vercel → Settings → Cron Jobs** and inspect the function logs after the first run. To verify manually, call `GET https://your-domain/api/cron/keep-alive` with `Authorization: Bearer <CRON_SECRET>`; it should return `{"ok":true}`. Without the header it returns 401, and a failed database read returns 502. Never put the cron secret in a browser URL or commit it to the repository.
+
 ## Roadmap
 
 - Add edit/update flows for all entry types
