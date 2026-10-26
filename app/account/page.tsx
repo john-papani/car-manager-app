@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { getCurrentVehicleProfile } from "@/lib/current-user-data";
-import { isDemoSession } from "@/lib/demo-mode";
 import PageHeader from "@/components/PageHeader";
 import PageMain from "@/components/PageMain";
 import PageSkeleton from "@/components/PageSkeleton";
@@ -16,9 +15,6 @@ async function AccountContent() {
     redirect("/login");
   }
 
-  const isGoogleAccount =
-    session.provider === "google" && session.error !== "RefreshAccessTokenError";
-  const isDemoAccount = isDemoSession(session);
   let profile = null;
 
   try {
@@ -44,19 +40,11 @@ async function AccountContent() {
               Σύνδεση
             </h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-              {isGoogleAccount
-                ? "Συνδεδεμένος με Google — έτοιμος για Drive και αποδείξεις."
-                : "Συνδεδεμένος με demo λογαριασμό."}
+              Συνδεδεμένος μέσω Supabase Auth.
             </p>
-            {isDemoAccount ? (
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Το demo φορτώνει δοκιμαστικά δεδομένα. Η επεξεργασία είναι
-                απενεργοποιημένη.
-              </p>
-            ) : null}
           </div>
           <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent-strong)]">
-            {isGoogleAccount ? "Google" : "Demo"}
+            Supabase
           </span>
         </div>
 

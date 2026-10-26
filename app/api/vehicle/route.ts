@@ -2,18 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentVehicleProfile } from "@/lib/current-user-data";
 import { requireSession, requireWritableSession } from "@/lib/require-session";
-import { getCachedRows, getSheetCacheTag, upsertRowById } from "@/lib/sheets";
-import {
-  isVehicleProfileValid,
-  mapRowToVehicleProfile,
-} from "@/lib/vehicle-profile";
+import { getSheetCacheTag } from "@/lib/sheets";
+import { getSessionOwnerId } from "@/lib/supabase";
+import { getVehicleProfile, saveVehicleProfile } from "@/lib/supabase-data";
 import {
   formatZodError,
   updateVehicleProfileSchema,
 } from "@/lib/validation";
 import type { VehicleProfile } from "@/types/car";
 
-const SHEET_NAME = "vehicle_profile";
+const CACHE_KEY = "vehicle_profile";
 const PROFILE_ID = "vehicle-profile";
 
 export async function GET() {
@@ -55,12 +53,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existingRows = await getCachedRows(SHEET_NAME);
-    const existingProfile =
-      existingRows
-        .map(mapRowToVehicleProfile)
-        .filter(isVehicleProfileValid)
-        .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
+    const ownerId = getSessionOwnerId(authResult.session);
+    const existingProfile = await getVehicleProfile(ownerId);
     const now = new Date().toISOString();
 
     const profile: VehicleProfile = {
@@ -78,22 +72,9 @@ export async function PUT(request: NextRequest) {
       updated_at: now,
     };
 
-    await upsertRowById(SHEET_NAME, PROFILE_ID, [
-      profile.id,
-      profile.make,
-      profile.model,
-      profile.trim || "",
-      profile.year ?? "",
-      profile.license_plate || "",
-      profile.fuel_type || "",
-      profile.transmission || "",
-      profile.engine || "",
-      profile.color || "",
-      profile.created_at,
-      profile.updated_at,
-    ]);
+    await saveVehicleProfile(ownerId, profile);
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/");
     revalidatePath("/account");
 

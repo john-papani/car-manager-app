@@ -1,25 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
-import {
-  getGoogleAccessToken,
-  getGoogleAuthError,
-} from "@/lib/auth-server";
 import { requireWritableSession } from "@/lib/require-session";
-import { getUserDriveClient } from "@/lib/google";
+import {
+  getReceiptsBucket,
+  getSessionOwnerId,
+  getSupabaseAdminClient,
+} from "@/lib/supabase";
 
 const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
-
-function bufferToStream(buffer: Buffer) {
-  const readable = new Readable();
-  readable.push(buffer);
-  readable.push(null);
-  return readable;
-}
+const SIGNED_URL_TTL_SECONDS = 60;
 
 function getReceiptFileName(file: File) {
   const timestamp = new Date().toISOString().replaceAll(":", "-");
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   return `${timestamp}-${safeName}`;
+}
+
+export async function GET(request: NextRequest) {
+  const authResult = await requireWritableSession("view receipt images");
+
+  if (!authResult.ok) {
+    return authResult.response;
+  }
+
+  const filePath = request.nextUrl.searchParams.get("path") ?? "";
+  const ownerId = getSessionOwnerId(authResult.session);
+  const supabase = getSupabaseAdminClient();
+  const { data: receipt, error: receiptError } = await supabase
+    .from("fuel_entries")
+    .select("id")
+    .eq("owner_id", ownerId)
+    .eq("receipt_file_id", filePath)
+    .maybeSingle();
+
+  if (receiptError || !receipt) {
+    return NextResponse.json({ message: "Receipt not found" }, { status: 404 });
+  }
+
+  const { data, error } = await supabase.storage
+    .from(getReceiptsBucket())
+    .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
+
+  if (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Receipt not found" }, { status: 404 });
+  }
+
+  return NextResponse.redirect(data.signedUrl);
 }
 
 export async function POST(request: NextRequest) {
@@ -28,38 +54,6 @@ export async function POST(request: NextRequest) {
 
     if (!authResult.ok) {
       return authResult.response;
-    }
-
-    const accessToken = await getGoogleAccessToken();
-    const authError = await getGoogleAuthError();
-
-    if (!authResult.session.user?.email || !accessToken) {
-      return NextResponse.json(
-        {
-          message:
-            "Συνδέσου με τον Google λογαριασμό σου για να ανεβάζεις αποδείξεις στο προσωπικό σου Drive.",
-        },
-        { status: 401 },
-      );
-    }
-
-    if (authError === "RefreshAccessTokenError") {
-      return NextResponse.json(
-        {
-          message:
-            "Η σύνδεση με Google έληξε. Κάνε αποσύνδεση και ξανά σύνδεση.",
-        },
-        { status: 401 },
-      );
-    }
-
-    const folderId = process.env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID;
-
-    if (!folderId) {
-      return NextResponse.json(
-        { message: "Missing GOOGLE_DRIVE_RECEIPTS_FOLDER_ID" },
-        { status: 500 },
-      );
     }
 
     const formData = await request.formData();
@@ -86,25 +80,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const driveClient = getUserDriveClient(accessToken);
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const response = await driveClient.files.create({
-      requestBody: {
-        name: getReceiptFileName(file),
-        parents: [folderId],
+    const ownerId = getSessionOwnerId(authResult.session);
+    const bucket = getReceiptsBucket();
+    const filePath = `${ownerId.replace(/[^a-zA-Z0-9._-]/g, "_")}/${getReceiptFileName(file)}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const supabase = getSupabaseAdminClient();
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(
+      filePath,
+      buffer,
+      {
+        contentType: file.type,
+        cacheControl: "3600",
+        upsert: false,
       },
-      media: {
-        mimeType: file.type,
-        body: bufferToStream(buffer),
-      },
-      fields: "id, webViewLink",
-      supportsAllDrives: true,
-    });
+    );
+
+    if (uploadError) {
+      throw uploadError;
+    }
 
     return NextResponse.json({
-      file_id: response.data.id,
-      url: response.data.webViewLink,
+      file_id: filePath,
+      url: `/api/receipts?path=${encodeURIComponent(filePath)}`,
     });
   } catch (error) {
     console.error(error);
@@ -112,7 +109,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          "Δεν έγινε upload στο Google Drive. Έλεγξε ότι ο logged-in λογαριασμός βλέπει τον φάκελο και ότι το GOOGLE_DRIVE_RECEIPTS_FOLDER_ID είναι σωστό.",
+          "Δεν έγινε upload στο Supabase Storage. Έλεγξε το bucket και τα Supabase env vars.",
       },
       { status: 500 },
     );

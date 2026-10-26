@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import type { Session } from "next-auth";
-import { auth } from "@/auth";
-import { getDemoReadOnlyMessage, isDemoSession } from "@/lib/demo-mode";
+import { auth, type AppSession } from "@/auth";
 
 export type SessionAuthResult =
-  | { ok: true; session: Session }
+  | { ok: true; session: AppSession }
   | { ok: false; response: NextResponse };
 
 export async function requireSession(): Promise<SessionAuthResult> {
@@ -21,23 +19,8 @@ export async function requireSession(): Promise<SessionAuthResult> {
 }
 
 export async function requireWritableSession(
-  action: string,
+  action?: string,
 ): Promise<SessionAuthResult> {
-  const result = await requireSession();
-
-  if (!result.ok) {
-    return result;
-  }
-
-  if (isDemoSession(result.session)) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { message: getDemoReadOnlyMessage(action) },
-        { status: 403 },
-      ),
-    };
-  }
-
-  return result;
+  void action;
+  return requireSession();
 }

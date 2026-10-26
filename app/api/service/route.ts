@@ -3,17 +3,15 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentServiceEntries } from "@/lib/current-user-data";
 import { requireSession, requireWritableSession } from "@/lib/require-session";
+import { getSheetCacheTag } from "@/lib/sheets";
+import { getSessionOwnerId } from "@/lib/supabase";
 import {
-  mapRowToServiceEntry,
-  serviceEntryToRowValues,
-} from "@/lib/service-entry";
-import {
-  appendRow,
-  deleteRowById,
-  getRowById,
-  getSheetCacheTag,
-  upsertRowById,
-} from "@/lib/sheets";
+  deleteServiceEntryRecord,
+  getServiceEntryById,
+  getHighestOdometer,
+  insertServiceEntry,
+  updateServiceEntryRecord,
+} from "@/lib/supabase-data";
 import {
   createServiceEntrySchema,
   formatZodError,
@@ -22,7 +20,7 @@ import {
 } from "@/lib/validation";
 import type { ServiceEntry } from "@/types/car";
 
-const SHEET_NAME = "service_entries";
+const CACHE_KEY = "service_entries";
 
 export async function GET() {
   try {
@@ -65,12 +63,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existingEntries = await getCurrentServiceEntries(authResult.session);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const highestOdometer = await getHighestOdometer("service_entries", ownerId);
     const odometerError = validateOdometerMonotonicity(
-      existingEntries.map((entry) => entry.odometer),
+      [highestOdometer],
       body.odometer,
-      undefined,
-      existingEntries,
     );
 
     if (odometerError) {
@@ -92,8 +89,8 @@ export async function POST(request: NextRequest) {
       updated_at: now,
     };
 
-    await appendRow(SHEET_NAME, serviceEntryToRowValues(entry));
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    await insertServiceEntry(ownerId, entry);
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/service");
     revalidatePath("/");
 
@@ -126,18 +123,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existing = await getRowById(SHEET_NAME, body.id);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const existing = await getServiceEntryById(ownerId, body.id);
 
     if (!existing) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    const existingEntries = await getCurrentServiceEntries(authResult.session);
+    const highestOdometer = await getHighestOdometer("service_entries", ownerId, body.id);
     const odometerError = validateOdometerMonotonicity(
-      existingEntries.map((entry) => entry.odometer),
+      [highestOdometer],
       body.odometer,
-      body.id,
-      existingEntries,
     );
 
     if (odometerError) {
@@ -146,7 +142,7 @@ export async function PUT(request: NextRequest) {
 
     const updatedAt = new Date().toISOString();
     const entry: ServiceEntry = {
-      ...mapRowToServiceEntry(existing),
+      ...existing,
       date: body.date,
       odometer: body.odometer,
       total_cost: body.total_cost,
@@ -157,9 +153,9 @@ export async function PUT(request: NextRequest) {
       updated_at: updatedAt,
     };
 
-    await upsertRowById(SHEET_NAME, body.id, serviceEntryToRowValues(entry));
+    await updateServiceEntryRecord(ownerId, entry);
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/service");
     revalidatePath("/");
 
@@ -191,13 +187,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleted = await deleteRowById(SHEET_NAME, entryId);
+    const deleted = await deleteServiceEntryRecord(
+      getSessionOwnerId(authResult.session),
+      entryId,
+    );
 
     if (!deleted) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/service");
 
     return NextResponse.json({ success: true });
