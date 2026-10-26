@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const supabase = createClient();
-
 export default function ResetPasswordPage() {
+  const [supabase] = useState(createClient);
   const verificationStarted = useRef(false);
   const [recovery, setRecovery] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -15,33 +14,63 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (verificationStarted.current) return;
-    verificationStarted.current = true;
     const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
     const tokenHash = params.get("token_hash");
+    const code = params.get("code");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setRecovery(true);
+        setChecking(false);
+      }
+    });
+    if (verificationStarted.current) return () => subscription.unsubscribe();
+    verificationStarted.current = true;
 
-    if (!tokenHash || params.get("type") !== "recovery") {
+    if (params.get("error") || params.get("error_code") || hashParams.get("error")) {
+      queueMicrotask(() => {
+        setError("Ο σύνδεσμος επαναφοράς δεν είναι έγκυρος ή έχει λήξει. Ζήτησε νέο email.");
+        setChecking(false);
+      });
+    } else if (tokenHash && params.get("type") === "recovery") {
+      // Remove the one-time token from browser history before showing the form.
+      window.history.replaceState({}, "", "/reset-password");
+      void supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(
+        ({ error: verifyError }) => {
+          if (verifyError) {
+            setError("Ο σύνδεσμος έληξε ή έχει ήδη χρησιμοποιηθεί. Ζήτησε νέο email.");
+          } else {
+            setRecovery(true);
+          }
+          setChecking(false);
+        },
+        () => {
+          setError("Δεν έγινε επιβεβαίωση του συνδέσμου. Δοκίμασε ξανά.");
+          setChecking(false);
+        },
+      );
+    } else if (code) {
+      // The default Supabase email uses PKCE; the browser client consumes the code.
+      void supabase.auth.getSession().then(
+        ({ data, error: sessionError }) => {
+          if (!sessionError && data.session && !new URLSearchParams(window.location.search).has("code")) {
+            setRecovery(true);
+          } else {
+            setError("Ο σύνδεσμος δεν επαληθεύτηκε. Άνοιξέ τον στον ίδιο browser όπου ζήτησες το email ή ζήτησε νέο σύνδεσμο.");
+          }
+          setChecking(false);
+        },
+        () => {
+          setError("Δεν έγινε επιβεβαίωση του συνδέσμου. Δοκίμασε ξανά.");
+          setChecking(false);
+        },
+      );
+    } else {
       queueMicrotask(() => setChecking(false));
-      return;
     }
 
-    // Remove the one-time token from browser history before showing the form.
-    window.history.replaceState({}, "", "/reset-password");
-    void supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(
-      ({ error: verifyError }) => {
-        if (verifyError) {
-          setError("Ο σύνδεσμος έληξε ή έχει ήδη χρησιμοποιηθεί. Ζήτησε νέο email.");
-        } else {
-          setRecovery(true);
-        }
-        setChecking(false);
-      },
-      () => {
-        setError("Δεν έγινε επιβεβαίωση του συνδέσμου. Δοκίμασε ξανά.");
-        setChecking(false);
-      },
-    );
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   async function requestReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
