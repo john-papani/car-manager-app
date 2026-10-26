@@ -1,17 +1,15 @@
-import type { Session } from "next-auth";
-import { auth } from "@/auth";
-import { isDemoSession } from "@/lib/demo-mode";
-import { getCachedRows } from "@/lib/sheets";
+import { auth, type AppSession } from "@/auth";
 import { isExpenseEntryValid, mapRowToExpenseEntry } from "@/lib/expense-entry";
 import { isFuelEntryValid, mapRowToFuelEntry } from "@/lib/fuel-entry";
-import {
-  demoExpenseEntries,
-  demoFuelEntries,
-  demoServiceEntries,
-  demoVehicleProfile,
-} from "@/lib/mock-data";
 import { loadMappedRows, type RowLoadResult } from "@/lib/row-load-result";
 import { isServiceEntryValid, mapRowToServiceEntry } from "@/lib/service-entry";
+import { getSessionOwnerId } from "@/lib/supabase";
+import {
+  getVehicleProfile,
+  listExpenseEntries,
+  listFuelEntries,
+  listServiceEntries,
+} from "@/lib/supabase-data";
 import {
   isVehicleProfileValid,
   mapRowToVehicleProfile,
@@ -27,7 +25,7 @@ export type DataLoadHealth = {
   invalidRowCount: number;
 };
 
-async function resolveSession(session?: Session | null) {
+async function resolveSession(session?: AppSession | null) {
   return session === undefined ? auth() : session;
 }
 
@@ -35,16 +33,33 @@ function emptyHealth(): DataLoadHealth {
   return { invalidRowCount: 0 };
 }
 
+function requireResolvedSession(session: AppSession | null | undefined) {
+  if (!session?.user) {
+    throw new Error("Missing authenticated session");
+  }
+
+  return session;
+}
+
+function toStringRecord(
+  item: Record<string, string | number | boolean | null | undefined>,
+) {
+  return Object.fromEntries(
+    Object.entries(item).map(([key, value]) => [
+      key,
+      value === undefined || value === null ? "" : String(value),
+    ]),
+  );
+}
+
 export async function getCurrentFuelEntriesWithHealth(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<RowLoadResult<FuelEntry> & DataLoadHealth> {
   const resolvedSession = await resolveSession(session);
 
-  if (isDemoSession(resolvedSession)) {
-    return { entries: demoFuelEntries, invalidRowCount: 0 };
-  }
-
-  const rows = await getCachedRows("fuel_entries");
+  const rows = (
+    await listFuelEntries(getSessionOwnerId(requireResolvedSession(resolvedSession)))
+  ).map(toStringRecord);
   const result = loadMappedRows(rows, mapRowToFuelEntry, (entry) =>
     isFuelEntryValid(entry),
   );
@@ -53,22 +68,22 @@ export async function getCurrentFuelEntriesWithHealth(
 }
 
 export async function getCurrentFuelEntries(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<FuelEntry[]> {
   const { entries } = await getCurrentFuelEntriesWithHealth(session);
   return entries;
 }
 
 export async function getCurrentServiceEntriesWithHealth(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<RowLoadResult<ServiceEntry> & DataLoadHealth> {
   const resolvedSession = await resolveSession(session);
 
-  if (isDemoSession(resolvedSession)) {
-    return { entries: demoServiceEntries, invalidRowCount: 0 };
-  }
-
-  const rows = await getCachedRows("service_entries");
+  const rows = (
+    await listServiceEntries(
+      getSessionOwnerId(requireResolvedSession(resolvedSession)),
+    )
+  ).map(toStringRecord);
   const result = loadMappedRows(rows, mapRowToServiceEntry, (entry) =>
     isServiceEntryValid(entry),
   );
@@ -77,22 +92,22 @@ export async function getCurrentServiceEntriesWithHealth(
 }
 
 export async function getCurrentServiceEntries(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<ServiceEntry[]> {
   const { entries } = await getCurrentServiceEntriesWithHealth(session);
   return entries;
 }
 
 export async function getCurrentExpenseEntriesWithHealth(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<RowLoadResult<ExpenseEntry> & DataLoadHealth> {
   const resolvedSession = await resolveSession(session);
 
-  if (isDemoSession(resolvedSession)) {
-    return { entries: demoExpenseEntries, invalidRowCount: 0 };
-  }
-
-  const rows = await getCachedRows("expense_entries");
+  const rows = (
+    await listExpenseEntries(
+      getSessionOwnerId(requireResolvedSession(resolvedSession)),
+    )
+  ).map(toStringRecord);
   const result = loadMappedRows(rows, mapRowToExpenseEntry, (entry) =>
     isExpenseEntryValid(entry),
   );
@@ -101,32 +116,31 @@ export async function getCurrentExpenseEntriesWithHealth(
 }
 
 export async function getCurrentExpenseEntries(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<ExpenseEntry[]> {
   const { entries } = await getCurrentExpenseEntriesWithHealth(session);
   return entries;
 }
 
 export async function getCurrentVehicleProfile(
-  session?: Session | null,
+  session?: AppSession | null,
 ): Promise<VehicleProfile | null> {
   const resolvedSession = await resolveSession(session);
 
-  if (isDemoSession(resolvedSession)) {
-    return demoVehicleProfile;
+  const profile = await getVehicleProfile(
+    getSessionOwnerId(requireResolvedSession(resolvedSession)),
+  );
+
+  if (!profile) {
+    return null;
   }
 
-  const rows = await getCachedRows("vehicle_profile");
+  const mappedProfile = mapRowToVehicleProfile(toStringRecord(profile));
 
-  return (
-    rows
-      .map(mapRowToVehicleProfile)
-      .filter(isVehicleProfileValid)
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null
-  );
+  return isVehicleProfileValid(mappedProfile) ? mappedProfile : null;
 }
 
-export async function getDataHealthSummary(session?: Session | null) {
+export async function getDataHealthSummary(session?: AppSession | null) {
   const [fuel, service, expenses] = await Promise.all([
     getCurrentFuelEntriesWithHealth(session),
     getCurrentServiceEntriesWithHealth(session),

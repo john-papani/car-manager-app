@@ -3,18 +3,21 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 import { createFuelCalendarEvent, deleteCalendarEvent } from "@/lib/calendar";
 import { getCurrentFuelEntries } from "@/lib/current-user-data";
-import {
-  fuelEntryFromExistingRow,
-  fuelEntryToRowValues,
-} from "@/lib/fuel-entry";
+import { fuelEntryFromExistingRow } from "@/lib/fuel-entry";
 import { requireSession, requireWritableSession } from "@/lib/require-session";
+import { getSheetCacheTag } from "@/lib/sheets";
 import {
-  appendRow,
-  deleteRowById,
-  getRowById,
-  getSheetCacheTag,
-  upsertRowById,
-} from "@/lib/sheets";
+  getReceiptsBucket,
+  getSessionOwnerId,
+  getSupabaseAdminClient,
+} from "@/lib/supabase";
+import {
+  deleteFuelEntryRecord,
+  getFuelEntryById,
+  getHighestOdometer,
+  insertFuelEntry,
+  updateFuelEntryRecord,
+} from "@/lib/supabase-data";
 import {
   createFuelEntrySchema,
   formatZodError,
@@ -24,9 +27,15 @@ import {
 } from "@/lib/validation";
 import type { FuelEntry } from "@/types/car";
 
-const SHEET_NAME = "fuel_entries";
+const CACHE_KEY = "fuel_entries";
 
-async function attachCalendarEventId(entry: FuelEntry) {
+function toRowRecord(entry: FuelEntry) {
+  return Object.fromEntries(
+    Object.entries(entry).map(([key, value]) => [key, String(value ?? "")]),
+  );
+}
+
+async function attachCalendarEventId(ownerId: string, entry: FuelEntry) {
   try {
     const eventId = await createFuelCalendarEvent(entry);
 
@@ -34,11 +43,10 @@ async function attachCalendarEventId(entry: FuelEntry) {
       return;
     }
 
-    await upsertRowById(
-      SHEET_NAME,
-      entry.id,
-      fuelEntryToRowValues({ ...entry, calendar_event_id: eventId }),
-    );
+    await updateFuelEntryRecord(ownerId, {
+      ...entry,
+      calendar_event_id: eventId,
+    });
   } catch (calendarError) {
     console.error("Calendar event creation failed:", calendarError);
   }
@@ -85,12 +93,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existingEntries = await getCurrentFuelEntries(authResult.session);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const highestOdometer = await getHighestOdometer("fuel_entries", ownerId);
     const odometerError = validateOdometerMonotonicity(
-      existingEntries.map((entry) => entry.odometer),
+      [highestOdometer],
       body.odometer,
-      undefined,
-      existingEntries,
     );
 
     if (odometerError) {
@@ -98,15 +105,13 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const pricePerLiter = Number((body.total_cost / body.liters).toFixed(3));
-
     const entry: FuelEntry = {
       id: uuidv4(),
       date: body.date,
       odometer: body.odometer,
       liters: body.liters,
       total_cost: body.total_cost,
-      price_per_liter: pricePerLiter,
+      price_per_liter: Number((body.total_cost / body.liters).toFixed(3)),
       station: body.station || "",
       is_full_tank: body.is_full_tank,
       notes: body.notes || "",
@@ -117,13 +122,13 @@ export async function POST(request: NextRequest) {
       updated_at: now,
     };
 
-    await appendRow(SHEET_NAME, fuelEntryToRowValues(entry));
+    await insertFuelEntry(ownerId, entry);
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/fuel");
     revalidatePath("/");
 
-    void attachCalendarEventId(entry);
+    void attachCalendarEventId(ownerId, entry);
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
@@ -154,26 +159,24 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existing = await getRowById(SHEET_NAME, body.id);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const existing = await getFuelEntryById(ownerId, body.id);
 
     if (!existing) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    const existingEntries = await getCurrentFuelEntries(authResult.session);
+    const highestOdometer = await getHighestOdometer("fuel_entries", ownerId, body.id);
     const odometerError = validateOdometerMonotonicity(
-      existingEntries.map((entry) => entry.odometer),
+      [highestOdometer],
       body.odometer,
-      body.id,
-      existingEntries,
     );
 
     if (odometerError) {
       return NextResponse.json({ message: odometerError }, { status: 400 });
     }
 
-    const updatedAt = new Date().toISOString();
-    const entry = fuelEntryFromExistingRow(existing, {
+    const entry = fuelEntryFromExistingRow(toRowRecord(existing), {
       date: body.date,
       odometer: body.odometer,
       liters: body.liters,
@@ -185,12 +188,12 @@ export async function PUT(request: NextRequest) {
       receipt_url: body.receipt_url || existing.receipt_url || "",
       calendar_event_id: existing.calendar_event_id || "",
       created_at: existing.created_at,
-      updated_at: updatedAt,
+      updated_at: new Date().toISOString(),
     });
 
-    await upsertRowById(SHEET_NAME, body.id, fuelEntryToRowValues(entry));
+    await updateFuelEntryRecord(ownerId, entry);
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/fuel");
     revalidatePath("/");
 
@@ -223,7 +226,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = parsed.data;
-    const existing = await getRowById(SHEET_NAME, body.id);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const existing = await getFuelEntryById(ownerId, body.id);
 
     if (!existing) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
@@ -239,16 +243,15 @@ export async function PATCH(request: NextRequest) {
       body.notes === undefined;
 
     if (isReceiptOnlyUpdate) {
-      const updatedAt = new Date().toISOString();
-      const entry = fuelEntryFromExistingRow(existing, {
+      const entry = fuelEntryFromExistingRow(toRowRecord(existing), {
         receipt_file_id: body.receipt_file_id ?? existing.receipt_file_id,
         receipt_url: body.receipt_url ?? existing.receipt_url,
-        updated_at: updatedAt,
+        updated_at: new Date().toISOString(),
       });
 
-      await upsertRowById(SHEET_NAME, body.id, fuelEntryToRowValues(entry));
+      await updateFuelEntryRecord(ownerId, entry);
 
-      revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+      revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
       revalidatePath("/fuel");
       revalidatePath("/");
 
@@ -265,20 +268,17 @@ export async function PATCH(request: NextRequest) {
     }
 
     const full = fullBody.data;
-    const existingEntries = await getCurrentFuelEntries(authResult.session);
+    const highestOdometer = await getHighestOdometer("fuel_entries", ownerId, body.id);
     const odometerError = validateOdometerMonotonicity(
-      existingEntries.map((entry) => entry.odometer),
+      [highestOdometer],
       full.odometer,
-      full.id,
-      existingEntries,
     );
 
     if (odometerError) {
       return NextResponse.json({ message: odometerError }, { status: 400 });
     }
 
-    const updatedAt = new Date().toISOString();
-    const entry = fuelEntryFromExistingRow(existing, {
+    const entry = fuelEntryFromExistingRow(toRowRecord(existing), {
       date: full.date,
       odometer: full.odometer,
       liters: full.liters,
@@ -290,12 +290,12 @@ export async function PATCH(request: NextRequest) {
       receipt_url: full.receipt_url || existing.receipt_url || "",
       calendar_event_id: existing.calendar_event_id || "",
       created_at: existing.created_at,
-      updated_at: updatedAt,
+      updated_at: new Date().toISOString(),
     });
 
-    await upsertRowById(SHEET_NAME, full.id, fuelEntryToRowValues(entry));
+    await updateFuelEntryRecord(ownerId, entry);
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/fuel");
     revalidatePath("/");
 
@@ -327,29 +327,38 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const entry = await getRowById(SHEET_NAME, entryId);
+    const ownerId = getSessionOwnerId(authResult.session);
+    const entry = await getFuelEntryById(ownerId, entryId);
 
     if (!entry) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    const deleted = await deleteRowById(SHEET_NAME, entryId);
+    const deleted = await deleteFuelEntryRecord(ownerId, entryId);
 
     if (!deleted) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    const calendarEventId = entry.calendar_event_id;
+    if (entry.receipt_file_id) {
+      const { error: storageError } = await getSupabaseAdminClient().storage
+        .from(getReceiptsBucket())
+        .remove([entry.receipt_file_id]);
 
-    if (calendarEventId) {
+      if (storageError) {
+        console.error("Receipt delete failed:", storageError);
+      }
+    }
+
+    if (entry.calendar_event_id) {
       try {
-        await deleteCalendarEvent(calendarEventId);
+        await deleteCalendarEvent(entry.calendar_event_id);
       } catch (calendarError) {
         console.error("Calendar event delete failed:", calendarError);
       }
     }
 
-    revalidateTag(getSheetCacheTag(SHEET_NAME), "max");
+    revalidateTag(getSheetCacheTag(CACHE_KEY), "max");
     revalidatePath("/");
     revalidatePath("/fuel");
 

@@ -5,7 +5,6 @@ import {
   Suspense,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -48,24 +47,10 @@ function toastToneClasses(tone: ToastTone) {
 
 function NavigationProgress() {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    setVisible(true);
-
-    const timeout = window.setTimeout(() => {
-      setVisible(false);
-    }, 700);
-
-    return () => window.clearTimeout(timeout);
-  }, [pathname]);
-
-  if (!visible) {
-    return null;
-  }
 
   return (
     <div
+      key={pathname}
       aria-hidden="true"
       className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5 overflow-hidden bg-transparent"
     >
