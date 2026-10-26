@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { useToast } from "@/components/AppProviders";
 import { getOfflineEntryCount } from "@/lib/offline-queue";
@@ -31,6 +32,24 @@ export function useOffline() {
   }
 
   return context;
+}
+
+function subscribeToOnlineStatus(onStoreChange: () => void) {
+  window.addEventListener("online", onStoreChange);
+  window.addEventListener("offline", onStoreChange);
+
+  return () => {
+    window.removeEventListener("online", onStoreChange);
+    window.removeEventListener("offline", onStoreChange);
+  };
+}
+
+function getOnlineStatusSnapshot() {
+  return navigator.onLine;
+}
+
+function getOnlineStatusServerSnapshot() {
+  return true;
 }
 
 function OfflineBanner({
@@ -87,7 +106,11 @@ export default function OfflineProvider({
 }) {
   const router = useRouter();
   const { showToast } = useToast();
-  const [isOnline, setIsOnline] = useState(true);
+  const isOnline = useSyncExternalStore(
+    subscribeToOnlineStatus,
+    getOnlineStatusSnapshot,
+    getOnlineStatusServerSnapshot,
+  );
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -123,11 +146,15 @@ export default function OfflineProvider({
   }, [refreshPendingCount, router, showToast]);
 
   const syncNowRef = useRef(syncNow);
-  syncNowRef.current = syncNow;
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    void refreshPendingCount();
+    syncNowRef.current = syncNow;
+  }, [syncNow]);
+
+  useEffect(() => {
+    void getOfflineEntryCount().then((count) => {
+      setPendingCount(count);
+    });
 
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js").catch((error) => {
@@ -136,10 +163,8 @@ export default function OfflineProvider({
     }
 
     const handleOnline = () => {
-      setIsOnline(true);
       void syncNowRef.current();
     };
-    const handleOffline = () => setIsOnline(false);
     const handleQueueChanged = () => {
       void refreshPendingCount();
     };
@@ -150,13 +175,11 @@ export default function OfflineProvider({
     };
 
     window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
     window.addEventListener("offline-queue-changed", handleQueueChanged);
     navigator.serviceWorker?.addEventListener("message", handleServiceWorkerMessage);
 
     return () => {
       window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
       window.removeEventListener("offline-queue-changed", handleQueueChanged);
       navigator.serviceWorker?.removeEventListener(
         "message",

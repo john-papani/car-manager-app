@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fcfaf7;
+  --background: #faf8f5;
   --background-strong: #f2e9dc;
   --foreground: #16313a;
-  --card: rgb(255 255 255 / 0.8);
+  --card: #ffffff;
   --card-strong: #fffdf9;
   --muted: #647481;
-  --line: rgb(22 49 58 / 0.06);
+  --line: rgb(22 49 58 / 0.12);
   --accent: #ca6f3d;
   --accent-strong: #ad5425;
   --accent-soft: #fdf2e9;
   --accent-soft-strong: #f9e6d8;
   --navy: #12313b;
-  --surface-shadow: 0 10px 30px -5px rgb(18 49 59 / 0.06), 0 4px 12px -4px rgb(18 49 59 / 0.04);
+  --surface-shadow: 0 8px 24px rgb(18 49 59 / 0.04);
   --inner-glow: inset 0 1px 1px rgb(255 255 255 / 0.8);
 }
 
@@ -30,18 +30,17 @@
 
 html {
   min-height: 100%;
+  background: var(--background);
+  overscroll-behavior-y: none;
 }
 
 body {
   min-height: 100lvh;
   margin: 0;
   background: var(--background);
+  overscroll-behavior-y: none;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  background-image:
-    radial-gradient(circle at top left, rgb(202 111 61 / 0.2), transparent 28%),
-    radial-gradient(circle at top right, rgb(18 49 59 / 0.1), transparent 24%),
-    linear-gradient(180deg, #fcfaf7 0%, #f7f0e6 100%);
 }
 
 a {
@@ -54,11 +53,7 @@ a {
 }
 
 button, a {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-button:active, a:active {
-  transform: scale(0.97);
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 input,
@@ -93,7 +88,14 @@ button:focus-visible {
 }
 
 .glass-card {
-  @apply backdrop-blur-xl bg-white/75 border border-white/50 shadow-[var(--surface-shadow)];
+  @apply bg-white border border-[var(--line)] shadow-[var(--surface-shadow)];
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @keyframes navProgress {

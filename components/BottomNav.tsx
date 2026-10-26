@@ -119,7 +119,7 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.9rem)] pt-2 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:max-w-none lg:translate-x-0">
-      <div className="flex items-center gap-2 rounded-[1.7rem] border border-white/70 bg-[rgb(255_251_246_/_0.84)] px-2 py-2 shadow-[0_18px_40px_rgb(18_49_59_/_0.12)] backdrop-blur-xl">
+      <div className="flex items-center gap-2 rounded-[1.7rem] border border-[var(--line)] bg-white px-2 py-2 shadow-[var(--surface-shadow)]">
         <div className="grid min-w-0 flex-1 grid-cols-4 gap-1">
           {items.map((item) => {
             const isActive =
