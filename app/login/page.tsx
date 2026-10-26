@@ -127,6 +127,12 @@ async function LoginContent({ searchParams }: LoginPageProps) {
               Σύνδεση
             </AuthSubmitButton>
           </form>
+          <Link
+            href="/reset-password"
+            className="mt-4 block text-center text-sm font-semibold text-[var(--accent-strong)] hover:underline"
+          >
+            Ξέχασες τον κωδικό σου;
+          </Link>
         </div>
         ) : (
         <div className="mt-6">

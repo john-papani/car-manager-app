@@ -171,6 +171,18 @@ You have two options:
 - Easiest: run the app and create the user from `/login`
 - Or create a user manually in `Authentication -> Users`
 
+### Password reset
+
+1. In Supabase `Authentication -> URL Configuration`, set the Site URL to the production app URL and add `https://your-domain/reset-password` to the Redirect URLs (also add `http://localhost:3000/reset-password` for local testing).
+2. In `Authentication -> Email Templates -> Reset password`, replace the link's `href` with:
+
+   ```html
+   {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery
+   ```
+
+   Keep the rest of the email template. The app verifies this one-time token before allowing a new password. A default `{{ .ConfirmationURL }}` link cannot establish the recovery session on the server-rendered app.
+3. Use **Ξέχασες τον κωδικό σου;** on `/login`. Supabase's default email service has a low sending limit; configure custom SMTP if reset emails are needed in production.
+
 ### Google Calendar
 
 Still optional and used only for fuel-entry calendar events.
