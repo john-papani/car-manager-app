@@ -42,7 +42,7 @@ async function LoginContent({ searchParams }: LoginPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
-      <section className="w-full rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[var(--surface-shadow)]">
+      <section className="w-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--surface-shadow)]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Car Manager
@@ -98,7 +98,7 @@ async function LoginContent({ searchParams }: LoginPageProps) {
                 name="email"
                 type="email"
                 autoComplete="email"
-                className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-base text-[var(--foreground)] focus:border-[var(--accent)]"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-base text-[var(--foreground)] focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -115,7 +115,7 @@ async function LoginContent({ searchParams }: LoginPageProps) {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-base text-[var(--foreground)] focus:border-[var(--accent)]"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-base text-[var(--foreground)] focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -161,14 +161,14 @@ async function LoginContent({ searchParams }: LoginPageProps) {
             className="space-y-3"
           >
             <label htmlFor="signup_name" className="block text-xs font-semibold text-[var(--muted)]">Όνομα</label>
-            <input id="signup_name" name="signup_name" type="text" autoComplete="name" className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-base" />
+            <input id="signup_name" name="signup_name" type="text" autoComplete="name" className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-base" />
             <label htmlFor="signup_email" className="block text-xs font-semibold text-[var(--muted)]">Email</label>
             <input
               id="signup_email"
               name="signup_email"
               type="email"
               autoComplete="email"
-              className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-base"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-base"
               required
             />
             <label htmlFor="signup_password" className="block text-xs font-semibold text-[var(--muted)]">Κωδικός</label>
@@ -177,7 +177,7 @@ async function LoginContent({ searchParams }: LoginPageProps) {
               name="signup_password"
               type="password"
               autoComplete="new-password"
-              className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-base"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3.5 py-3 text-base"
               required
             />
             <AuthSubmitButton

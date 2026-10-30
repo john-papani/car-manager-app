@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Suspense } from "react";
 import "./globals.css";
 import AppBottomNav from "@/components/AppBottomNav";
@@ -21,7 +22,18 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#12313b",
+  colorScheme: "light dark",
 };
+
+const themeScript = `
+  try {
+    const preference = localStorage.getItem("car-manager-theme") || "system";
+    const theme = preference === "system"
+      ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : preference;
+    document.documentElement.dataset.theme = theme;
+  } catch {}
+`;
 
 export default async function RootLayout({
   children,
@@ -29,7 +41,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="el">
+    <html lang="el" suppressHydrationWarning>
       <body className="text-[var(--foreground)] antialiased">
         <AppProviders>
           <OfflineProvider>
@@ -45,6 +57,9 @@ export default async function RootLayout({
           </OfflineProvider>
         </AppProviders>
       </body>
+      <Script id="theme-init" strategy="beforeInteractive">
+        {themeScript}
+      </Script>
     </html>
   );
 }

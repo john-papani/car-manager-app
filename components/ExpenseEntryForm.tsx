@@ -88,7 +88,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 type="date"
                 value={form.date}
                 onChange={(event) => updateField("date", event.target.value)}
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -102,7 +102,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 value={form.category}
                 onChange={(event) => updateField("category", event.target.value)}
                 placeholder="π.χ. Ασφάλεια"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -118,7 +118,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 value={form.total_cost}
                 onChange={(event) => updateField("total_cost", event.target.value)}
                 placeholder="85.00"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -136,7 +136,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 value={form.vendor}
                 onChange={(event) => updateField("vendor", event.target.value)}
                 placeholder="π.χ. e-Pass, Δημοτικό Parking"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
 
@@ -150,7 +150,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 value={form.odometer}
                 onChange={(event) => updateField("odometer", event.target.value)}
                 placeholder="προαιρετικό"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
 
@@ -163,7 +163,7 @@ export default function ExpenseEntryForm({ initialEntry }: ExpenseEntryFormProps
                 onChange={(event) => updateField("notes", event.target.value)}
                 placeholder="π.χ. ετήσια ανανέωση ασφάλειας"
                 rows={3}
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
           </div>

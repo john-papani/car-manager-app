@@ -14,7 +14,7 @@ export default function ConsumptionBarChart({
 }: ConsumptionBarChartProps) {
   if (points.length === 0) {
     return (
-      <div className="rounded-[1.6rem] border border-dashed border-[var(--line)] bg-white/45 p-4 text-sm leading-6 text-[var(--muted)]">
+      <div className="rounded-[1.6rem] border border-dashed border-[var(--line)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
         Χρειάζονται τουλάχιστον δύο γεμίσματα με full tank για να βγει
         γράφημα κατανάλωσης.
       </div>
@@ -24,7 +24,7 @@ export default function ConsumptionBarChart({
   const maxValue = Math.max(...points.map((point) => point.value), 1);
 
   return (
-    <div className="rounded-[1.6rem] bg-white/50 p-4" role="img" aria-label="Γράφημα κατανάλωσης καυσίμου">
+    <div className="rounded-[1.6rem] bg-[var(--surface-subtle)] p-4" role="img" aria-label="Γράφημα κατανάλωσης καυσίμου">
       <div className="flex h-40 items-end gap-3">
         {points.map((point) => {
           const height = Math.max((point.value / maxValue) * 100, 16);

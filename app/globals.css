@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
+  color-scheme: light;
   --background: #faf8f5;
   --background-strong: #f2e9dc;
   --foreground: #16313a;
@@ -15,6 +18,32 @@
   --navy: #12313b;
   --surface-shadow: 0 8px 24px rgb(18 49 59 / 0.04);
   --inner-glow: inset 0 1px 1px rgb(255 255 255 / 0.8);
+  --surface: #ffffff;
+  --surface-soft: rgb(255 255 255 / 0.7);
+  --surface-subtle: rgb(255 255 255 / 0.5);
+  --chart-track: rgb(22 49 58 / 0.08);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1418;
+  --background-strong: #111f24;
+  --foreground: #e8f0f2;
+  --card: #132329;
+  --card-strong: #172a31;
+  --muted: #9aabb2;
+  --line: rgb(220 237 241 / 0.14);
+  --accent: #dc8250;
+  --accent-strong: #f09a68;
+  --accent-soft: #35231c;
+  --accent-soft-strong: #452b20;
+  --navy: #1b3943;
+  --surface-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+  --inner-glow: inset 0 1px 1px rgb(255 255 255 / 0.05);
+  --surface: #172a31;
+  --surface-soft: rgb(34 56 64 / 0.82);
+  --surface-subtle: rgb(34 56 64 / 0.62);
+  --chart-track: rgb(220 237 241 / 0.12);
 }
 
 @theme inline {
@@ -70,7 +99,7 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: color-mix(in srgb, var(--muted) 78%, white);
+  color: color-mix(in srgb, var(--muted) 82%, var(--surface));
 }
 
 input:focus,
@@ -88,7 +117,7 @@ button:focus-visible {
 }
 
 .glass-card {
-  @apply bg-white border border-[var(--line)] shadow-[var(--surface-shadow)];
+  @apply bg-[var(--surface)] border border-[var(--line)] shadow-[var(--surface-shadow)];
 }
 
 @media (prefers-reduced-motion: reduce) {

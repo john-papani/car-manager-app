@@ -9,6 +9,21 @@
   "background_color": "#faf8f5",
   "theme_color": "#12313b",
   "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Νέο γέμισμα",
+      "short_name": "Γέμισμα",
+      "description": "Καταχώρηση νέου γεμίσματος καυσίμου",
+      "url": "/fuel/new",
+      "icons": [
+        {
+          "src": "/car-icon.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "/car-icon.svg",

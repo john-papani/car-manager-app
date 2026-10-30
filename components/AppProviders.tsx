@@ -37,11 +37,11 @@ export function useToast() {
 function toastToneClasses(tone: ToastTone) {
   switch (tone) {
     case "success":
-      return "border-emerald-200/80 bg-emerald-50 text-emerald-950";
+      return "border-emerald-200/80 bg-emerald-50 text-emerald-950 dark:border-emerald-700/70 dark:bg-emerald-950 dark:text-emerald-100";
     case "error":
-      return "border-red-200/80 bg-red-50 text-red-950";
+      return "border-red-200/80 bg-red-50 text-red-950 dark:border-red-700/70 dark:bg-red-950 dark:text-red-100";
     default:
-      return "border-sky-200/80 bg-sky-50 text-sky-950";
+      return "border-sky-200/80 bg-sky-50 text-sky-950 dark:border-sky-700/70 dark:bg-sky-950 dark:text-sky-100";
   }
 }
 

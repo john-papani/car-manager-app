@@ -122,7 +122,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
             aria-pressed={view === option}
             className={`min-h-10 rounded-full px-4 text-sm font-semibold ${
               view === option
-                ? "bg-white text-[var(--foreground)] shadow-sm"
+                ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
                 : "text-[var(--muted)]"
             }`}
           >
@@ -174,7 +174,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
                 </p>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-[1.35rem] bg-white/70 p-3">
+                  <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                       Km
                     </p>
@@ -182,7 +182,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
                       {entry.odometer.toLocaleString("el-GR")}
                     </p>
                   </div>
-                  <div className="rounded-[1.35rem] bg-white/70 p-3">
+                  <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                       Λίτρα
                     </p>

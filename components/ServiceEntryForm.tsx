@@ -94,7 +94,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 type="date"
                 value={form.date}
                 onChange={(event) => updateField("date", event.target.value)}
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -108,7 +108,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 value={form.service_type}
                 onChange={(event) => updateField("service_type", event.target.value)}
                 placeholder="π.χ. Αλλαγή λαδιών"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -123,7 +123,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 value={form.odometer}
                 onChange={(event) => updateField("odometer", event.target.value)}
                 placeholder="185420"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
                 required
               />
             </div>
@@ -139,7 +139,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 value={form.total_cost}
                 onChange={(event) => updateField("total_cost", event.target.value)}
                 placeholder="120.00"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 value={form.location}
                 onChange={(event) => updateField("location", event.target.value)}
                 placeholder="π.χ. Auto Service Νίκος"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
 
@@ -172,7 +172,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                   updateField("next_service_odometer", event.target.value)
                 }
                 placeholder="195000"
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
 
@@ -185,7 +185,7 @@ export default function ServiceEntryForm({ initialEntry }: ServiceEntryFormProps
                 onChange={(event) => updateField("notes", event.target.value)}
                 placeholder="π.χ. μαζί με φίλτρο λαδιού και έλεγχο φρένων"
                 rows={3}
-                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+                className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
               />
             </div>
           </div>

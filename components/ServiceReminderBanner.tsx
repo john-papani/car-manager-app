@@ -15,11 +15,11 @@ type ServiceReminderBannerProps = {
 function urgencyClasses(urgency: ServiceReminder["urgency"]) {
   switch (urgency) {
     case "overdue":
-      return "border-red-200 bg-red-50 text-red-950";
+      return "border-red-200 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950 dark:text-red-100";
     case "due_soon":
-      return "border-amber-200 bg-amber-50 text-amber-950";
+      return "border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100";
     default:
-      return "border-sky-200 bg-sky-50 text-sky-950";
+      return "border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100";
   }
 }
 
@@ -115,7 +115,7 @@ export default function ServiceReminderBanner({
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
           href="/service"
-          className="inline-flex rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold"
+          className="inline-flex rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold"
         >
           Ιστορικό service
         </Link>

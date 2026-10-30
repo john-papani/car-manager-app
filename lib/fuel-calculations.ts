@@ -1,5 +1,54 @@
 import type { FuelEntry } from "@/types/car";
 
+export type FuelAmountField = "liters" | "total_cost" | "price_per_liter";
+
+export type FuelAmountValues = Record<FuelAmountField, string>;
+
+export function updateFuelAmounts(
+  values: FuelAmountValues,
+  editedField: FuelAmountField,
+  value: string,
+  autoField: FuelAmountField | null,
+) {
+  const nextValues = { ...values, [editedField]: value };
+
+  if (!value) {
+    return { values: nextValues, autoField: null };
+  }
+
+  const numbers = {
+    liters: Number.parseFloat(nextValues.liters),
+    total_cost: Number.parseFloat(nextValues.total_cost),
+    price_per_liter: Number.parseFloat(nextValues.price_per_liter),
+  };
+  const fields = Object.keys(numbers) as FuelAmountField[];
+  const validFields = fields.filter(
+    (field) => Number.isFinite(numbers[field]) && numbers[field] > 0,
+  );
+  let targetField: FuelAmountField | null = null;
+
+  if (validFields.length === 2) {
+    targetField = fields.find((field) => !validFields.includes(field)) ?? null;
+  } else if (validFields.length === 3) {
+    targetField =
+      autoField && autoField !== editedField
+        ? autoField
+        : editedField === "price_per_liter"
+          ? "total_cost"
+          : "price_per_liter";
+  }
+
+  if (targetField === "liters") {
+    nextValues.liters = (numbers.total_cost / numbers.price_per_liter).toFixed(2);
+  } else if (targetField === "total_cost") {
+    nextValues.total_cost = (numbers.liters * numbers.price_per_liter).toFixed(2);
+  } else if (targetField === "price_per_liter") {
+    nextValues.price_per_liter = (numbers.total_cost / numbers.liters).toFixed(3);
+  }
+
+  return { values: nextValues, autoField: targetField };
+}
+
 export function calculateConsumption(
   currentEntry: FuelEntry,
   previousEntry?: FuelEntry

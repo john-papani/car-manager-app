@@ -3,7 +3,7 @@ type FormShellProps = {
 };
 
 export const formInputClass =
-  "w-full rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3.5 text-base transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10";
+  "w-full rounded-[1.1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3.5 text-base transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10";
 
 export const formLabelClass =
   "mb-1.5 block text-sm font-medium text-[var(--foreground)]";

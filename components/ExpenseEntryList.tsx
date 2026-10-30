@@ -92,7 +92,7 @@ export default function ExpenseEntryList({ entries }: ExpenseEntryListProps) {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-                <div className="rounded-[1.35rem] bg-white/70 p-3">
+                <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                     Σημείο
                   </p>
@@ -100,7 +100,7 @@ export default function ExpenseEntryList({ entries }: ExpenseEntryListProps) {
                     {entry.vendor || "—"}
                   </p>
                 </div>
-                <div className="rounded-[1.35rem] bg-white/70 p-3">
+                <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
                     Km
                   </p>

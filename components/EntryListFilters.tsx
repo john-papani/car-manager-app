@@ -90,7 +90,7 @@ export default function EntryListFilters({
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="inline-flex shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white px-3 py-2.5 text-xs font-semibold text-[var(--foreground)]"
+          className="inline-flex shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-xs font-semibold text-[var(--foreground)]"
           aria-expanded={expanded}
         >
           Φίλτρα

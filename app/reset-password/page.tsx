@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
-      <section className="w-full rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[var(--surface-shadow)]">
+      <section className="w-full rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--surface-shadow)]">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">Car Manager</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
           {recovery ? "Νέος κωδικός" : "Επαναφορά κωδικού"}

@@ -76,7 +76,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:opacity-55"
+            className="flex-1 rounded-[1.1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:opacity-55"
           >
             {cancelLabel}
           </button>

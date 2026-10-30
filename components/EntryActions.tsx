@@ -38,7 +38,7 @@ export default function EntryActions({
     <div className="flex shrink-0 items-center gap-1">
       <Link
         href={editHref}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-white/80 hover:text-[var(--foreground)] active:scale-95"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)] active:scale-95"
         aria-label="Επεξεργασία"
       >
         <EditIcon />

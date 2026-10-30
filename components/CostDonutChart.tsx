@@ -48,7 +48,7 @@ export default function CostDonutChart({
 
   if (total <= 0 || filteredSegments.length === 0) {
     return (
-      <div className="rounded-[1.6rem] border border-dashed border-[var(--line)] bg-white/45 p-4 text-sm leading-6 text-[var(--muted)]">
+      <div className="rounded-[1.6rem] border border-dashed border-[var(--line)] bg-[var(--surface-subtle)] p-4 text-sm leading-6 text-[var(--muted)]">
         Δεν υπάρχουν ακόμα αρκετά κόστη για γράφημα κατανομής.
       </div>
     );
@@ -71,7 +71,7 @@ export default function CostDonutChart({
 
   return (
     <div
-      className="flex items-center gap-4 rounded-[1.6rem] bg-white/50 p-4"
+      className="flex items-center gap-4 rounded-[1.6rem] bg-[var(--surface-subtle)] p-4"
       role="img"
       aria-label="Γράφημα κατανομής κόστους"
     >
@@ -82,7 +82,7 @@ export default function CostDonutChart({
             cy="60"
             r="42"
             fill="none"
-            stroke="rgb(22 49 58 / 0.08)"
+            stroke="var(--chart-track)"
             strokeWidth="16"
           />
           {arcSegments.map((segment) => (

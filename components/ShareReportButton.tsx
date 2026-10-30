@@ -292,7 +292,7 @@ export default function ShareReportButton({
                 className={`rounded-full px-3 py-2 text-sm font-semibold ${
                   mode === "month"
                     ? "bg-[var(--navy)] text-white"
-                    : "border border-[var(--line)] bg-white"
+                    : "border border-[var(--line)] bg-[var(--surface)]"
                 }`}
               >
                 Μηνιαία
@@ -306,7 +306,7 @@ export default function ShareReportButton({
                 className={`rounded-full px-3 py-2 text-sm font-semibold ${
                   mode === "year"
                     ? "bg-[var(--navy)] text-white"
-                    : "border border-[var(--line)] bg-white"
+                    : "border border-[var(--line)] bg-[var(--surface)]"
                 }`}
               >
                 Ετήσια
@@ -328,7 +328,7 @@ export default function ShareReportButton({
               </select>
             </label>
 
-            <div className="mt-4 space-y-2 rounded-[1.35rem] bg-white/70 p-4 text-sm">
+            <div className="mt-4 space-y-2 rounded-[1.35rem] bg-[var(--surface-soft)] p-4 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-[var(--muted)]">Σύνολο</span>
                 <span className="font-semibold">{report.totalCost.toFixed(2)}€</span>

@@ -3,6 +3,7 @@ import {
   calculateConsumption,
   calculateCostPerKm,
   calculateFuelStats,
+  updateFuelAmounts,
 } from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
@@ -19,6 +20,42 @@ const baseEntry = (
 });
 
 describe("fuel-calculations", () => {
+  it("calculates liters from total cost and the suggested price", () => {
+    const result = updateFuelAmounts(
+      { liters: "", total_cost: "", price_per_liter: "1.800" },
+      "total_cost",
+      "72",
+      null,
+    );
+
+    expect(result.values.liters).toBe("40.00");
+    expect(result.autoField).toBe("liters");
+  });
+
+  it("keeps recalculating the automatically filled field", () => {
+    const result = updateFuelAmounts(
+      { liters: "40", total_cost: "72.00", price_per_liter: "1.800" },
+      "liters",
+      "42",
+      "total_cost",
+    );
+
+    expect(result.values.total_cost).toBe("75.60");
+    expect(result.autoField).toBe("total_cost");
+  });
+
+  it("recalculates price when an automatic amount is edited manually", () => {
+    const result = updateFuelAmounts(
+      { liters: "40.00", total_cost: "72.00", price_per_liter: "1.800" },
+      "liters",
+      "45",
+      "liters",
+    );
+
+    expect(result.values.price_per_liter).toBe("1.600");
+    expect(result.autoField).toBe("price_per_liter");
+  });
+
   it("returns null consumption when previous entry is missing", () => {
     const current = baseEntry({ id: "a", odometer: 1000, liters: 40 });
 

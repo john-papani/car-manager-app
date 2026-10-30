@@ -233,7 +233,7 @@ async function DashboardContent() {
                   href={latestEntry.receipt_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex rounded-full border border-[var(--line)] bg-white px-3 py-1 text-xs font-semibold text-[var(--foreground)]"
+                  className="inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--foreground)]"
                 >
                   Απόδειξη
                 </a>

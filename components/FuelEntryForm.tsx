@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   attachFuelReceipt,
@@ -21,40 +21,49 @@ import FormShell, {
   formLabelClass,
   formSectionClass,
 } from "@/components/FormShell";
+import {
+  updateFuelAmounts,
+  type FuelAmountField,
+} from "@/lib/fuel-calculations";
 import type { FuelEntry } from "@/types/car";
 
 type FuelEntryFormProps = {
   initialEntry?: FuelEntry;
+  suggestedEntry?: FuelEntry;
 };
 
-export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
+export default function FuelEntryForm({
+  initialEntry,
+  suggestedEntry,
+}: FuelEntryFormProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
     date: initialEntry?.date ?? new Date().toISOString().slice(0, 10),
-    odometer: initialEntry ? String(initialEntry.odometer) : "",
+    odometer: initialEntry
+      ? String(initialEntry.odometer)
+      : suggestedEntry
+        ? String(suggestedEntry.odometer)
+        : "",
     liters: initialEntry ? String(initialEntry.liters) : "",
     total_cost: initialEntry ? String(initialEntry.total_cost) : "",
-    station: initialEntry?.station ?? "",
+    price_per_liter: initialEntry
+      ? String(initialEntry.price_per_liter)
+      : suggestedEntry
+        ? String(suggestedEntry.price_per_liter)
+        : "",
+    station: initialEntry?.station ?? suggestedEntry?.station ?? "",
     is_full_tank: initialEntry?.is_full_tank ?? true,
     notes: initialEntry?.notes ?? "",
   });
+  const [autoAmountField, setAutoAmountField] = useState<FuelAmountField | null>(
+    null,
+  );
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const pricePreview = useMemo(() => {
-    const liters = parseFloat(form.liters);
-    const totalCost = parseFloat(form.total_cost);
-
-    if (!Number.isFinite(liters) || liters <= 0 || !Number.isFinite(totalCost)) {
-      return null;
-    }
-
-    return (totalCost / liters).toFixed(3);
-  }, [form.liters, form.total_cost]);
 
   const normalizeDecimalInput = (value: string) => {
     return value
@@ -68,6 +77,22 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
       ...previous,
       [name]: value,
     }));
+  }
+
+  function updateAmountField(name: FuelAmountField, value: string) {
+    const result = updateFuelAmounts(
+      {
+        liters: form.liters,
+        total_cost: form.total_cost,
+        price_per_liter: form.price_per_liter,
+      },
+      name,
+      normalizeDecimalInput(value),
+      autoAmountField,
+    );
+
+    setForm((previous) => ({ ...previous, ...result.values }));
+    setAutoAmountField(result.autoField);
   }
 
   function handleReceiptChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -198,9 +223,7 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
                 type="text"
                 inputMode="decimal"
                 value={form.liters}
-                onChange={(event) =>
-                  updateField("liters", normalizeDecimalInput(event.target.value))
-                }
+                onChange={(event) => updateAmountField("liters", event.target.value)}
                 placeholder="0.00"
                 className={formInputClass}
                 required
@@ -214,15 +237,29 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
                 inputMode="decimal"
                 value={form.total_cost}
                 onChange={(event) =>
-                  updateField(
-                    "total_cost",
-                    normalizeDecimalInput(event.target.value),
-                  )
+                  updateAmountField("total_cost", event.target.value)
                 }
                 placeholder="0.00"
                 className={formInputClass}
                 required
               />
+            </div>
+
+            <div className="col-span-2">
+              <label className={formLabelClass}>Τιμή ανά λίτρο €</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={form.price_per_liter}
+                onChange={(event) =>
+                  updateAmountField("price_per_liter", event.target.value)
+                }
+                placeholder="1.800"
+                className={formInputClass}
+              />
+              <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                Συμπλήρωσε δύο από τα τρία πεδία και το τρίτο υπολογίζεται αυτόματα.
+              </p>
             </div>
 
             <div className="col-span-2">
@@ -236,14 +273,6 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
               />
             </div>
 
-            {pricePreview ? (
-              <div className="col-span-2 rounded-[1.1rem] border border-[var(--accent-soft)] bg-[var(--accent-soft)]/50 px-4 py-3 text-sm">
-                <span className="text-[var(--muted)]">Τιμή ανά λίτρο: </span>
-                <span className="font-bold text-[var(--accent-strong)]">
-                  {pricePreview} €/L
-                </span>
-              </div>
-            ) : null}
           </div>
         </div>
 
@@ -274,7 +303,7 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
             accept="image/*"
             capture="environment"
             onChange={handleReceiptChange}
-            className="w-full rounded-[1.1rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition file:mr-3 file:rounded-full file:border-0 file:bg-[var(--accent-soft)] file:px-3 file:py-2 file:text-xs file:font-bold file:uppercase file:text-[var(--accent-strong)]"
+            className="w-full rounded-[1.1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition file:mr-3 file:rounded-full file:border-0 file:bg-[var(--accent-soft)] file:px-3 file:py-2 file:text-xs file:font-bold file:uppercase file:text-[var(--accent-strong)]"
           />
           <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
             Προαιρετικό — ανεβαίνει στο background μετά την αποθήκευση.
@@ -298,7 +327,7 @@ export default function FuelEntryForm({ initialEntry }: FuelEntryFormProps) {
             onChange={(event) => updateField("notes", event.target.value)}
             placeholder="π.χ. ταξίδι, κίνηση..."
             rows={3}
-            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3 text-base transition focus:border-[var(--accent)]"
+            className="w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-base transition focus:border-[var(--accent)]"
           />
         </div>
       </div>

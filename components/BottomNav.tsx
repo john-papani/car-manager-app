@@ -119,7 +119,7 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.9rem)] pt-2 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:max-w-none lg:translate-x-0">
-      <div className="flex items-center gap-2 rounded-[1.7rem] border border-[var(--line)] bg-white px-2 py-2 shadow-[var(--surface-shadow)]">
+      <div className="flex items-center gap-2 rounded-[1.7rem] border border-[var(--line)] bg-[var(--surface)] px-2 py-2 shadow-[var(--surface-shadow)]">
         <div className="grid min-w-0 flex-1 grid-cols-4 gap-1">
           {items.map((item) => {
             const isActive =
@@ -136,7 +136,7 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
                 className={`rounded-[1.1rem] px-1.5 py-2 text-center transition ${
                   isActive
                     ? "bg-[rgb(18_49_59_/_0.08)] text-[var(--navy)]"
-                    : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
+                    : "text-[var(--muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"
                 }`}
               >
                 <span className="flex flex-col items-center gap-1">
@@ -153,7 +153,7 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
         <Link
           href={profileHref}
           aria-label={userEmail ? "Λογαριασμός" : "Σύνδεση"}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white/86 text-[var(--navy)] shadow-[0_8px_20px_rgb(18_49_59_/_0.08)] transition hover:bg-white"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-soft)] text-[var(--foreground)] shadow-[0_8px_20px_rgb(18_49_59_/_0.08)] transition hover:bg-[var(--surface)]"
           title={profileLabel}
         >
           {userEmail ? (

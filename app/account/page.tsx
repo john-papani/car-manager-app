@@ -7,6 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import PageMain from "@/components/PageMain";
 import PageSkeleton from "@/components/PageSkeleton";
 import VehicleProfileForm from "@/components/VehicleProfileForm";
+import ThemeToggle from "@/components/ThemeToggle";
 
 async function AccountContent() {
   const session = await auth();
@@ -32,6 +33,10 @@ async function AccountContent() {
       />
 
       <VehicleProfileForm initialProfile={profile} />
+
+      <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[var(--surface-shadow)]">
+        <ThemeToggle />
+      </section>
 
       <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
         <div className="flex items-start justify-between gap-3">
@@ -65,7 +70,7 @@ async function AccountContent() {
 
           <Link
             href="/"
-            className="block w-full rounded-[1.2rem] border border-[var(--line)] bg-white px-4 py-3.5 text-center text-sm font-semibold text-[var(--foreground)]"
+            className="block w-full rounded-[1.2rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3.5 text-center text-sm font-semibold text-[var(--foreground)]"
           >
             Επιστροφή στην αρχική
           </Link>
