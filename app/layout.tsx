@@ -43,6 +43,9 @@ export default async function RootLayout({
   return (
     <html lang="el" suppressHydrationWarning>
       <body className="text-[var(--foreground)] antialiased">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
         <AppProviders>
           <OfflineProvider>
             <AppShell
@@ -57,9 +60,6 @@ export default async function RootLayout({
           </OfflineProvider>
         </AppProviders>
       </body>
-      <Script id="theme-init" strategy="beforeInteractive">
-        {themeScript}
-      </Script>
     </html>
   );
 }
