@@ -85,16 +85,28 @@ export default function CostDonutChart({
             stroke="var(--chart-track)"
             strokeWidth="16"
           />
-          {arcSegments.map((segment) => (
-            <path
-              key={segment.label}
-              d={describeArc(60, 60, 42, segment.startAngle, segment.endAngle)}
-              fill="none"
-              stroke={segment.color}
-              strokeWidth="16"
-              strokeLinecap="round"
-            />
-          ))}
+          {arcSegments.map((segment) =>
+            segment.endAngle - segment.startAngle >= 359.999 ? (
+              <circle
+                key={segment.label}
+                cx="60"
+                cy="60"
+                r="42"
+                fill="none"
+                stroke={segment.color}
+                strokeWidth="16"
+              />
+            ) : (
+              <path
+                key={segment.label}
+                d={describeArc(60, 60, 42, segment.startAngle, segment.endAngle)}
+                fill="none"
+                stroke={segment.color}
+                strokeWidth="16"
+                strokeLinecap="round"
+              />
+            ),
+          )}
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
