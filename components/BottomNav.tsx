@@ -133,9 +133,10 @@ export default function BottomNav({ userEmail, userName }: BottomNavProps) {
                 href={item.href}
                 prefetch={true}
                 aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
                 className={`rounded-[1.1rem] px-1.5 py-2 text-center transition ${
                   isActive
-                    ? "bg-[rgb(18_49_59_/_0.08)] text-[var(--navy)]"
+                    ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                     : "text-[var(--muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--foreground)]"
                 }`}
               >
