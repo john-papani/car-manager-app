@@ -166,16 +166,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
     }
 
-    const highestOdometer = await getHighestOdometer("fuel_entries", ownerId, body.id);
-    const odometerError = validateOdometerMonotonicity(
-      [highestOdometer],
-      body.odometer,
-    );
-
-    if (odometerError) {
-      return NextResponse.json({ message: odometerError }, { status: 400 });
-    }
-
     const entry = fuelEntryFromExistingRow(toRowRecord(existing), {
       date: body.date,
       odometer: body.odometer,
@@ -268,15 +258,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     const full = fullBody.data;
-    const highestOdometer = await getHighestOdometer("fuel_entries", ownerId, body.id);
-    const odometerError = validateOdometerMonotonicity(
-      [highestOdometer],
-      full.odometer,
-    );
-
-    if (odometerError) {
-      return NextResponse.json({ message: odometerError }, { status: 400 });
-    }
 
     const entry = fuelEntryFromExistingRow(toRowRecord(existing), {
       date: full.date,

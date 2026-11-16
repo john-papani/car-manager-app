@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import EmptyState from "@/components/EmptyState";
 import EntryActions from "@/components/EntryActions";
 import EntryListFilters from "@/components/EntryListFilters";
@@ -9,10 +9,7 @@ import {
   filterFuelEntries,
   type EntryFilterState,
 } from "@/lib/entry-filters";
-import {
-  calculateConsumption,
-  calculateCostPerKm,
-} from "@/lib/fuel-calculations";
+import { calculateConsumption } from "@/lib/fuel-calculations";
 import {
   buildCalendarDays,
   monthKey,
@@ -36,7 +33,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
   const [selectedDate, setSelectedDate] = useState<string>();
 
   const sortedEntries = useMemo(
-    () => [...entries].sort((left, right) => right.odometer - left.odometer),
+    () => [...entries].sort((left, right) => right.date.localeCompare(left.date) || right.odometer - left.odometer),
     [entries],
   );
 
@@ -44,6 +41,15 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
     () => filterFuelEntries(sortedEntries, filters),
     [sortedEntries, filters],
   );
+
+  const monthlyTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const entry of filteredEntries) {
+      const month = entry.date.slice(0, 7);
+      totals.set(month, (totals.get(month) ?? 0) + entry.total_cost);
+    }
+    return totals;
+  }, [filteredEntries]);
 
   const previousById = useMemo(() => {
     const chronologicalEntries = [...entries].sort(
@@ -132,88 +138,65 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
       </div>
 
       {view === "list" ? (
-        <section className="mt-5 space-y-3">
+        <section className="mt-4 space-y-2">
           {filteredEntries.length === 0 ? (
             <div className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 text-sm text-[var(--muted)]">
               Δεν βρέθηκαν γεμίσματα με τα τρέχοντα φίλτρα.
             </div>
           ) : (
-            filteredEntries.map((entry) => {
+            filteredEntries.map((entry, index) => {
             const previousEntry = previousById.get(entry.id);
             const consumption = calculateConsumption(entry, previousEntry);
-            const costPerKm = calculateCostPerKm(entry, previousEntry);
+            const distance = previousEntry ? entry.odometer - previousEntry.odometer : null;
+            const month = entry.date.slice(0, 7);
+            const startsMonth = index === 0 || filteredEntries[index - 1].date.slice(0, 7) !== month;
 
             return (
-              <article
-                key={entry.id}
-                className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-[var(--muted)]">{entry.date}</p>
-                    <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-                      {entry.total_cost.toFixed(2)}€
-                    </h2>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
-                      {entry.price_per_liter.toFixed(3)}€/L
+              <Fragment key={entry.id}>
+              {startsMonth ? (
+                <div className="flex items-center gap-3 px-1 pt-3">
+                  <span className="h-px flex-1 bg-[var(--line)]" />
+                  <h2 className="text-center text-sm font-semibold capitalize text-[var(--foreground)]">
+                    {new Intl.DateTimeFormat("el-GR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}
+                    <span className="ml-2 inline-flex rounded-full bg-[var(--background-strong)] px-2 py-0.5 text-xs font-medium tabular-nums text-[var(--muted)]">
+                      {(monthlyTotals.get(month) ?? 0).toFixed(2)}€
                     </span>
-                    <EntryActions
-                      editHref={`/fuel/edit?id=${encodeURIComponent(entry.id)}`}
-                      entryId={entry.id}
-                      endpoint="/api/fuel"
-                      confirmMessage="Να διαγραφεί αυτή η καταχώρηση καυσίμου;"
-                    />
-                  </div>
+                  </h2>
+                  <span className="h-px flex-1 bg-[var(--line)]" />
                 </div>
-
-                <p className="mt-3 text-sm text-[var(--muted)]">
-                  {entry.station || "Χωρίς πρατήριο"}
-                </p>
-
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                      Km
-                    </p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
-                      {entry.odometer.toLocaleString("el-GR")}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                      Λίτρα
-                    </p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
-                      {entry.liters.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.35rem] bg-[var(--accent-soft)]/50 p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--accent-strong)]">
-                      L/100km
-                    </p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
-                      {consumption ?? "—"}
-                    </p>
-                  </div>
+              ) : null}
+              <article
+                className="rounded-2xl border border-[var(--line)] bg-[var(--card)] px-4 py-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-xs text-[var(--muted)]">
+                    {new Intl.DateTimeFormat("el-GR", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(`${entry.date}T00:00:00Z`))} · {entry.station || "Χωρίς πρατήριο"}
+                  </p>
+                  <EntryActions
+                    editHref={`/fuel/edit?id=${encodeURIComponent(entry.id)}`}
+                    entryId={entry.id}
+                    endpoint="/api/fuel"
+                    confirmMessage="Να διαγραφεί αυτή η καταχώρηση καυσίμου;"
+                  />
                 </div>
-
-                <div className="mt-4 flex items-center justify-end gap-3 text-sm text-[var(--muted)]">
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="text-xl font-semibold tracking-tight tabular-nums">{entry.total_cost.toFixed(2)}€</p>
+                  <p className="shrink-0 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--accent-strong)]">
+                    {distance === null ? "— km" : `+${distance.toLocaleString("el-GR")} km`}
+                  </p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--line)] pt-2 text-xs tabular-nums text-[var(--muted)]">
+                  <span className="font-medium text-[var(--foreground)]">{entry.liters.toFixed(2)} L</span>
+                  <span>{entry.price_per_liter.toFixed(3)}€/L</span>
+                  <span>{consumption ?? "—"} L/100km</span>
                   {entry.receipt_url ? (
-                    <a
-                      href={entry.receipt_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium text-[var(--accent-strong)]"
-                    >
+                    <a href={entry.receipt_url} target="_blank" rel="noreferrer" className="ml-auto shrink-0 font-medium text-[var(--accent-strong)]">
                       Απόδειξη
                     </a>
                   ) : null}
-                  <span>{costPerKm ? `${costPerKm}€/km` : "—€/km"}</span>
                 </div>
               </article>
+              </Fragment>
             );
             })
           )}
