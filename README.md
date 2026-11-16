@@ -108,10 +108,12 @@ Store:
 
 ## Getting Started
 
+Requires Node.js 20.9 or newer. On Windows, install pnpm with `npm install -g pnpm@latest` if it is not already available. Check with `pnpm --version`.
+
 ### 1. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Create `.env.local`
@@ -131,7 +133,7 @@ GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\
 ### 3. Run the development server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open `http://localhost:3000`
@@ -207,13 +209,13 @@ To move the existing Google Sheets entries into Supabase:
 4. Preview and validate the rows without writing:
 
 ```bash
-npm run migrate:sheets-to-supabase -- --owner-email=your@email.com
+pnpm migrate:sheets-to-supabase --owner-email=your@email.com
 ```
 
 5. Check the printed counts, then import:
 
 ```bash
-npm run migrate:sheets-to-supabase -- --owner-email=your@email.com --apply
+pnpm migrate:sheets-to-supabase --owner-email=your@email.com --apply
 ```
 
 The script resolves the email to the Supabase Auth user ID. Running it again updates rows with the same IDs; take a database backup first if you have edited any imported rows in the app.
@@ -230,12 +232,12 @@ It does **not** migrate uploaded files. Existing Google Drive receipt links rema
 ## Available Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run test
-npm run migrate:sheets-to-supabase -- --owner-email=your@email.com --apply
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm test
+pnpm migrate:sheets-to-supabase --owner-email=your@email.com --apply
 ```
 
 ## Project Structure
@@ -290,7 +292,7 @@ public/
 ## Migration Notes
 
 - Main app data now lives in Supabase, not Google Sheets
-- Existing Google Sheets data moves with `npm run migrate:sheets-to-supabase`
+- Existing Google Sheets data moves with `pnpm migrate:sheets-to-supabase`
 - Calendar integration still uses Google service-account credentials if you want fuel events
 
 ## Known Limitations
