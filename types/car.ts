@@ -126,6 +126,8 @@ export type VehicleDocument = {
   provider?: string;
   total_cost?: number;
   notes?: string;
+  file_path?: string;
+  file_name?: string;
   created_at: string;
   updated_at: string;
 };

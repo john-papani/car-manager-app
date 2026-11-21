@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/AppProviders";
 import DeleteEntryButton from "@/components/DeleteEntryButton";
@@ -15,8 +15,10 @@ import {
   getDocumentStatus,
   sortDocumentsByUrgency,
 } from "@/lib/document-status";
+import { isSupportedDocumentFile } from "@/lib/document-file";
 import {
   createVehicleDocument,
+  uploadVehicleDocumentFile,
   updateVehicleDocument,
 } from "@/services/documentService";
 import {
@@ -69,6 +71,8 @@ export default function VehicleDocumentManager({ entries }: Props) {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [file, setFile] = useState<File>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function updateField(name: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -77,6 +81,8 @@ export default function VehicleDocumentManager({ entries }: Props) {
   function resetForm() {
     setEditingId(undefined);
     setForm(emptyForm);
+    setFile(undefined);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setError("");
   }
 
@@ -90,7 +96,28 @@ export default function VehicleDocumentManager({ entries }: Props) {
       notes: entry.notes ?? "",
     });
     setError("");
+    setFile(undefined);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function selectFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const selected = event.target.files?.[0];
+    setError("");
+
+    if (!selected) {
+      setFile(undefined);
+      return;
+    }
+
+    if (!isSupportedDocumentFile(selected)) {
+      setFile(undefined);
+      event.target.value = "";
+      setError("Επίλεξε PDF ή εικόνα έως 10 MB.");
+      return;
+    }
+
+    setFile(selected);
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -107,10 +134,20 @@ export default function VehicleDocumentManager({ entries }: Props) {
     };
 
     try {
-      if (editingId) {
-        await updateVehicleDocument({ id: editingId, ...input });
-      } else {
-        await createVehicleDocument(input);
+      const { entry } = editingId
+        ? await updateVehicleDocument({ id: editingId, ...input })
+        : await createVehicleDocument(input);
+
+      if (file) {
+        try {
+          await uploadVehicleDocumentFile(entry.id, file);
+        } catch (uploadError) {
+          showToast("Τα στοιχεία αποθηκεύτηκαν, αλλά το αρχείο όχι.", "error");
+          console.error(uploadError);
+          resetForm();
+          startTransition(() => router.refresh());
+          return;
+        }
       }
 
       showToast(
@@ -214,6 +251,28 @@ export default function VehicleDocumentManager({ entries }: Props) {
                 placeholder="Αριθμός συμβολαίου ή άλλη πληροφορία"
               />
             </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="document-file" className={formLabelClass}>
+                PDF ή φωτογραφία
+              </label>
+              <input
+                ref={fileInputRef}
+                id="document-file"
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={selectFile}
+                className="w-full rounded-[1.1rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--accent-soft)] file:px-3 file:py-2 file:font-semibold file:text-[var(--accent-strong)]"
+              />
+              <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                Προαιρετικό, έως 10 MB. Νέο αρχείο αντικαθιστά το προηγούμενο.
+              </p>
+              {file ? (
+                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
+                  Επιλέχθηκε: {file.name}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {error ? (
@@ -289,6 +348,17 @@ export default function VehicleDocumentManager({ entries }: Props) {
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                     {entry.notes}
                   </p>
+                ) : null}
+
+                {entry.file_path ? (
+                  <a
+                    href={`/api/document-files?path=${encodeURIComponent(entry.file_path)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-[var(--accent-strong)] hover:bg-[var(--accent-soft)]"
+                  >
+                    Άνοιγμα αρχείου{entry.file_name ? `: ${entry.file_name}` : ""}
+                  </a>
                 ) : null}
 
                 <div className="mt-4 flex justify-end gap-2 border-t border-[var(--line)] pt-3">

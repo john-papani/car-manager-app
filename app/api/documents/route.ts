@@ -3,7 +3,11 @@ import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 import { getCurrentVehicleDocuments } from "@/lib/current-user-data";
 import { requireSession, requireWritableSession } from "@/lib/require-session";
-import { getSessionOwnerId } from "@/lib/supabase";
+import {
+  getSessionOwnerId,
+  getSupabaseAdminClient,
+  getVehicleDocumentsBucket,
+} from "@/lib/supabase";
 import {
   deleteVehicleDocumentRecord,
   getVehicleDocumentById,
@@ -120,12 +124,22 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: "Missing entry id" }, { status: 400 });
     }
 
-    const deleted = await deleteVehicleDocumentRecord(
-      getSessionOwnerId(authResult.session),
-      entryId,
-    );
+    const ownerId = getSessionOwnerId(authResult.session);
+    const existing = await getVehicleDocumentById(ownerId, entryId);
+    if (!existing) {
+      return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    const deleted = await deleteVehicleDocumentRecord(ownerId, entryId);
     if (!deleted) {
       return NextResponse.json({ message: "Entry not found" }, { status: 404 });
+    }
+
+    if (existing.file_path) {
+      const { error: storageError } = await getSupabaseAdminClient().storage
+        .from(getVehicleDocumentsBucket())
+        .remove([existing.file_path]);
+      if (storageError) console.error("Document file cleanup failed", storageError);
     }
 
     revalidatePath("/documents");

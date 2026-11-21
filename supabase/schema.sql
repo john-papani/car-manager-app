@@ -67,12 +67,18 @@ create table if not exists public.vehicle_documents (
   provider text not null default '',
   total_cost numeric(10, 2) check (total_cost >= 0),
   notes text not null default '',
+  file_path text not null default '',
+  file_name text not null default '',
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
 create index if not exists vehicle_documents_owner_expiry_idx
   on public.vehicle_documents (owner_id, expires_at asc);
+
+alter table public.vehicle_documents
+  add column if not exists file_path text not null default '',
+  add column if not exists file_name text not null default '';
 
 create table if not exists public.vehicle_profiles (
   id text primary key,
@@ -92,6 +98,10 @@ create table if not exists public.vehicle_profiles (
 
 insert into storage.buckets (id, name, public)
 values ('fuel-receipts', 'fuel-receipts', false)
+on conflict (id) do update set public = false;
+
+insert into storage.buckets (id, name, public)
+values ('vehicle-documents', 'vehicle-documents', false)
 on conflict (id) do update set public = false;
 
 -- Move legacy email ownership to the immutable Supabase Auth user id.
@@ -170,5 +180,17 @@ create policy "Users manage their receipt files"
   )
   with check (
     bucket_id = 'fuel-receipts'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "Users manage their vehicle document files" on storage.objects;
+create policy "Users manage their vehicle document files"
+  on storage.objects for all
+  using (
+    bucket_id = 'vehicle-documents'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'vehicle-documents'
     and (storage.foldername(name))[1] = auth.uid()::text
   );

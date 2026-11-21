@@ -29,3 +29,25 @@ export function createVehicleDocument(input: CreateVehicleDocumentInput) {
 export function updateVehicleDocument(input: UpdateVehicleDocumentInput) {
   return request("PUT", input);
 }
+
+export async function uploadVehicleDocumentFile(documentId: string, file: File) {
+  const formData = new FormData();
+  formData.append("document_id", documentId);
+  formData.append("file", file);
+
+  const response = await fetch("/api/document-files", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data.message || "Το αρχείο δεν αποθηκεύτηκε.");
+  }
+
+  return response.json() as Promise<{
+    file_path: string;
+    file_name: string;
+    url: string;
+  }>;
+}

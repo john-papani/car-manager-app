@@ -31,7 +31,7 @@ Because of that backend change, existing data from the Google Sheets version nee
 - Monthly report export/print flow from the dashboard
 - Delete actions for entries
 - Optional Google Calendar event creation for fuel entries
-- Vehicle document tracking for insurance, KTEO, road tax, and roadside assistance expiry dates
+- Vehicle document tracking with private PDF/image attachments for insurance, KTEO, road tax, and roadside assistance expiry dates
 
 ## Tech Stack
 

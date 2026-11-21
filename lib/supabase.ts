@@ -45,6 +45,10 @@ export function getReceiptsBucket() {
   return process.env.SUPABASE_RECEIPTS_BUCKET || "fuel-receipts";
 }
 
+export function getVehicleDocumentsBucket() {
+  return process.env.SUPABASE_VEHICLE_DOCUMENTS_BUCKET || "vehicle-documents";
+}
+
 export function getSessionOwnerId(session: AppSession) {
   const userId = session.user?.id?.trim();
 
