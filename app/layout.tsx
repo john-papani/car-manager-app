@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Car Manager",
   description: "Personal car fuel and service tracker",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/car-icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

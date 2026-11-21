@@ -1,4 +1,4 @@
-const CACHE_NAME = "car-manager-shell-v1";
+const CACHE_NAME = "car-manager-shell-v2";
 const PRECACHE_URLS = ["/", "/manifest.json", "/car-icon.svg"];
 
 self.addEventListener("install", (event) => {
