@@ -97,16 +97,16 @@ async function DashboardContent() {
 
   return (
     <PageMain>
-      <section className="rounded-[1.75rem] bg-[var(--navy)] p-5 text-white">
+      <section className="rounded-2xl bg-[var(--navy)] p-4 text-white">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
               Car Manager
             </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight leading-tight">
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight">
               {vehicleTitle}
             </h1>
-            <p className="mt-3 text-sm font-medium text-white/70">
+            <p className="mt-1.5 text-xs font-medium text-white/70">
               {currentOdometer > 0
                 ? `${currentOdometer.toLocaleString("el-GR")} km`
                 : "Δεν υπάρχουν ακόμη χιλιόμετρα"}
@@ -131,24 +131,24 @@ async function DashboardContent() {
           />
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-2">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           <Link
             href="/fuel/new"
-            className="flex items-center justify-center rounded-xl bg-white px-4 py-3.5 text-center text-sm font-semibold !text-[var(--navy)]"
+            className="flex min-h-11 items-center justify-center rounded-xl bg-white px-2 text-center text-xs font-semibold !text-[var(--navy)]"
           >
             + Καύσιμο
           </Link>
 
           <Link
             href="/expenses/new"
-            className="flex items-center justify-center rounded-xl border border-white/30 px-4 py-3.5 text-center text-sm font-semibold text-white"
+            className="flex min-h-11 items-center justify-center rounded-xl border border-white/30 px-2 text-center text-xs font-semibold !text-white"
           >
             + Έξοδο
           </Link>
 
           <Link
             href="/service/new"
-            className="flex items-center justify-center rounded-xl border border-white/30 px-2 py-3.5 text-center text-sm font-semibold text-white"
+            className="flex min-h-11 items-center justify-center rounded-xl border border-white/30 px-2 text-center text-xs font-semibold !text-white"
           >
             + Service
           </Link>
@@ -159,16 +159,16 @@ async function DashboardContent() {
       <DataHealthBanner invalidRowCount={invalidRowCount} />
 
       {serviceReminder ? (
-        <ServiceReminderBanner reminder={serviceReminder} />
+        <ServiceReminderBanner reminder={serviceReminder} compact />
       ) : null}
 
-      <section className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-[var(--card)] p-5">
+      <section className="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
               Έγγραφα οχήματος
             </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
               Ασφάλεια, ΚΤΕΟ και άλλες λήξεις.
             </p>
           </div>
@@ -185,7 +185,7 @@ async function DashboardContent() {
             Οι λήξεις δεν φορτώθηκαν. Έλεγξε ότι έχει εφαρμοστεί το νεότερο database schema.
           </p>
         ) : sortedDocuments.length > 0 ? (
-          <div className="mt-4 divide-y divide-[var(--line)]">
+          <div className="mt-3 divide-y divide-[var(--line)]">
             {sortedDocuments.map((entry) => {
               const result = getDocumentStatus(entry.expires_at);
               const status =
@@ -198,7 +198,7 @@ async function DashboardContent() {
               return (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                  className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[var(--foreground)]">
@@ -224,13 +224,13 @@ async function DashboardContent() {
         )}
       </section>
 
-      <section className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-[var(--card)] p-5">
+      <section className="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[var(--foreground)]">
               {monthlyReport.label}
             </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
               Έξοδα του τρέχοντος μήνα ανά κατηγορία.
             </p>
           </div>
@@ -242,8 +242,9 @@ async function DashboardContent() {
           </Link>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-3">
           <CostDonutChart
+            compact
             total={monthlyReport.totalCost}
             segments={[
               { label: "Καύσιμα", value: monthlyReport.fuelCost, color: "#ca6f3d" },
@@ -254,7 +255,7 @@ async function DashboardContent() {
         </div>
       </section>
 
-      <section className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-[var(--card)] p-5">
+      <section className="mt-3 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-[var(--foreground)]">
             Τελευταία καυσίμου
@@ -268,11 +269,11 @@ async function DashboardContent() {
         </div>
 
         {recentFuelEntries.length > 0 ? (
-          <div className="mt-4 divide-y divide-[var(--line)]">
+          <div className="mt-3 divide-y divide-[var(--line)]">
             {recentFuelEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                className="flex items-center justify-between gap-4 py-2 first:pt-0 last:pb-0"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[var(--foreground)]">

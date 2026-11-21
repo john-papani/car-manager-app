@@ -11,6 +11,7 @@ import {
 } from "@/lib/entry-filters";
 import { calculateConsumption } from "@/lib/fuel-calculations";
 import { buildFuelCsv } from "@/lib/fuel-csv";
+import { buildFuelReportHtml } from "@/lib/fuel-report-html";
 import {
   buildCalendarDays,
   monthKey,
@@ -108,6 +109,24 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
     URL.revokeObjectURL(url);
   }
 
+  function exportPdf() {
+    const reportWindow = window.open("", "_blank", "width=1000,height=720");
+
+    if (!reportWindow) {
+      alert("Δεν ήταν δυνατό να ανοίξει το παράθυρο εξαγωγής PDF.");
+      return;
+    }
+
+    reportWindow.document.open();
+    reportWindow.document.write(buildFuelReportHtml(filteredEntries));
+    reportWindow.document.close();
+    reportWindow.onload = () => {
+      reportWindow.focus();
+      reportWindow.print();
+      reportWindow.close();
+    };
+  }
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -128,27 +147,35 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
         onChange={setFilters}
       />
 
-      <button
-        type="button"
-        onClick={exportCsv}
-        disabled={filteredEntries.length === 0}
-        className="mt-3 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Εξαγωγή CSV ({filteredEntries.length})
-      </button>
-
-      <div
-        className="mt-4 grid grid-cols-2 rounded-full bg-[var(--background-strong)] p-1"
-        role="group"
-        aria-label="Τρόπος προβολής"
-      >
+      <div className="mt-3 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={exportPdf}
+          disabled={filteredEntries.length === 0}
+          className="min-h-11 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          PDF
+        </button>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={filteredEntries.length === 0}
+          className="min-h-11 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          CSV
+        </button>
+        <div
+          className="grid min-w-0 flex-1 grid-cols-2 rounded-xl bg-[var(--background-strong)] p-1"
+          role="group"
+          aria-label="Τρόπος προβολής"
+        >
         {(["list", "calendar"] as const).map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => setView(option)}
             aria-pressed={view === option}
-            className={`min-h-10 rounded-full px-4 text-sm font-semibold ${
+            className={`min-h-9 rounded-lg px-2 text-xs font-semibold ${
               view === option
                 ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
                 : "text-[var(--muted)]"
@@ -157,6 +184,7 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
             {option === "list" ? "Λίστα" : "Ημερολόγιο"}
           </button>
         ))}
+        </div>
       </div>
 
       {view === "list" ? (

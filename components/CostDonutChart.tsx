@@ -7,6 +7,7 @@ type DonutSegment = {
 type CostDonutChartProps = {
   segments: DonutSegment[];
   total: number;
+  compact?: boolean;
 };
 
 function polarToCartesian(
@@ -43,6 +44,7 @@ function describeArc(
 export default function CostDonutChart({
   segments,
   total,
+  compact = false,
 }: CostDonutChartProps) {
   const filteredSegments = segments.filter((segment) => segment.value > 0);
 
@@ -71,11 +73,11 @@ export default function CostDonutChart({
 
   return (
     <div
-      className="flex items-center gap-4 rounded-[1.6rem] bg-[var(--surface-subtle)] p-4"
+      className={`flex items-center rounded-2xl bg-[var(--surface-subtle)] ${compact ? "gap-3 p-3" : "gap-4 p-4"}`}
       role="img"
       aria-label="Γράφημα κατανομής κόστους"
     >
-      <div className="relative h-36 w-36 shrink-0">
+      <div className={`relative shrink-0 ${compact ? "h-28 w-28" : "h-36 w-36"}`}>
         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
           <circle
             cx="60"
@@ -119,17 +121,17 @@ export default function CostDonutChart({
         </div>
       </div>
 
-      <div className="flex-1 space-y-3">
+      <div className={`min-w-0 flex-1 ${compact ? "space-y-2" : "space-y-3"}`}>
         {filteredSegments.map((segment) => {
           const percentage = total > 0 ? (segment.value / total) * 100 : 0;
 
           return (
-            <div key={segment.label} className="flex items-center gap-3">
+            <div key={segment.label} className="flex items-center gap-2">
               <span
                 className="h-3 w-3 rounded-full"
                 style={{ backgroundColor: segment.color }}
               />
-              <div className="flex flex-1 items-center justify-between gap-3 text-sm">
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-xs sm:text-sm">
                 <span className="font-medium text-[var(--foreground)]">
                   {segment.label}
                 </span>

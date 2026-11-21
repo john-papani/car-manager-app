@@ -39,11 +39,12 @@ async function FuelContent() {
         description="Όλα τα γεμίσματα και η κατανάλωση σε μία λίστα."
         actionHref="/fuel/new"
         actionLabel="+ Νέο"
+        compact
       />
       {loadFailed ? <DataLoadError /> : null}
       <DataHealthBanner invalidRowCount={invalidRowCount} />
       {entries.length > 0 ? (
-        <section className="mt-5 grid grid-cols-3 gap-2 rounded-[1.6rem] border border-[var(--line)] bg-[var(--card)] p-3 text-center">
+        <section className="mt-3 grid grid-cols-3 gap-2 border-y border-[var(--line)] py-2 text-center">
           <div>
             <p className="text-[11px] text-[var(--muted)]">Γεμίσματα</p>
             <p className="font-semibold">{entries.length}</p>

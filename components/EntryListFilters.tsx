@@ -63,7 +63,7 @@ export default function EntryListFilters({
     Boolean(filters.station);
 
   return (
-    <section className="mt-5 rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]">
+    <section className="mt-3 border-b border-[var(--line)] pb-3">
       <div className="flex items-center gap-3">
         <div className="relative min-w-0 flex-1">
           <input
@@ -90,7 +90,7 @@ export default function EntryListFilters({
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="inline-flex shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 py-2.5 text-xs font-semibold text-[var(--foreground)]"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--foreground)]"
           aria-expanded={expanded}
         >
           Φίλτρα

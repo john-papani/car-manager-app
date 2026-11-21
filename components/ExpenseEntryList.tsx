@@ -60,7 +60,7 @@ export default function ExpenseEntryList({ entries }: ExpenseEntryListProps) {
         onChange={setFilters}
       />
 
-      <section className="mt-5 space-y-3">
+      <section className="mt-3 space-y-2">
         {filteredEntries.length === 0 ? (
           <div className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-5 text-sm text-[var(--muted)]">
             Δεν βρέθηκαν έξοδα με τα τρέχοντα φίλτρα.
@@ -69,17 +69,17 @@ export default function ExpenseEntryList({ entries }: ExpenseEntryListProps) {
           filteredEntries.map((entry) => (
             <article
               key={entry.id}
-              className="rounded-[1.9rem] border border-[var(--line)] bg-[var(--card)] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"
+              className="rounded-2xl border border-[var(--line)] bg-[var(--card)] px-4 py-3"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-[var(--muted)]">{entry.date}</p>
-                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-[var(--muted)]">{entry.date}</p>
+                  <h2 className="mt-0.5 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                     {entry.category}
                   </h2>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-strong)]">
+                  <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--accent-strong)]">
                     {entry.total_cost.toFixed(2)}€
                   </span>
                   <EntryActions
@@ -91,29 +91,17 @@ export default function ExpenseEntryList({ entries }: ExpenseEntryListProps) {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-                <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                    Σημείο
-                  </p>
-                  <p className="mt-1 font-semibold text-[var(--foreground)]">
-                    {entry.vendor || "—"}
-                  </p>
-                </div>
-                <div className="rounded-[1.35rem] bg-[var(--surface-soft)] p-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                    Km
-                  </p>
-                  <p className="mt-1 font-semibold text-[var(--foreground)]">
-                    {entry.odometer
-                      ? entry.odometer.toLocaleString("el-GR")
-                      : "—"}
-                  </p>
-                </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--line)] pt-2 text-xs text-[var(--muted)]">
+                <span className="font-medium text-[var(--foreground)]">
+                  {entry.vendor || "Χωρίς σημείο"}
+                </span>
+                {entry.odometer ? (
+                  <span>{entry.odometer.toLocaleString("el-GR")} km</span>
+                ) : null}
               </div>
 
               {entry.notes ? (
-                <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
                   {entry.notes}
                 </p>
               ) : null}

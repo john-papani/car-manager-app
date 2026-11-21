@@ -6,6 +6,7 @@ type PageHeaderProps = {
   description: string;
   actionHref?: string;
   actionLabel?: string;
+  compact?: boolean;
 };
 
 export default function PageHeader({
@@ -14,7 +15,27 @@ export default function PageHeader({
   description,
   actionHref,
   actionLabel = "+ Νέο",
+  compact = false,
 }: PageHeaderProps) {
+  if (compact) {
+    return (
+      <header className="flex items-center justify-between gap-3 py-1">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-[var(--muted)]">{eyebrow}</p>
+          <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
+        </div>
+        {actionHref ? (
+          <Link
+            href={actionHref}
+            className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-[var(--navy)] px-4 text-sm font-semibold !text-white"
+          >
+            {actionLabel}
+          </Link>
+        ) : null}
+      </header>
+    );
+  }
+
   return (
     <section className="rounded-[1.75rem] bg-[var(--navy)] p-5 text-white">
 

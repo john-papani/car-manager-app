@@ -87,7 +87,7 @@ export default function ServiceReminderBanner({
 
   return (
     <section
-      className={`${compact ? "mt-0" : "mt-5"} rounded-[1.9rem] border p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)] ${urgencyClasses(reminder.urgency)}`}
+      className={`${compact ? "mt-3 rounded-2xl p-3" : "mt-5 rounded-[1.9rem] p-4 shadow-[0_18px_40px_rgb(18_49_59_/_0.06)]"} border ${urgencyClasses(reminder.urgency)}`}
       role="status"
     >
       <div className="flex items-start justify-between gap-3">
@@ -95,8 +95,8 @@ export default function ServiceReminderBanner({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] opacity-70">
             Υπενθύμιση service
           </p>
-          <p className="mt-2 text-sm font-semibold leading-6">{message}</p>
-          <p className="mt-2 text-xs leading-5 opacity-80">
+          <p className={`${compact ? "mt-1 leading-5" : "mt-2 leading-6"} text-sm font-semibold`}>{message}</p>
+          <p className={`${compact ? "mt-1" : "mt-2"} text-xs leading-5 opacity-80`}>
             Στόχος {reminder.nextOdometer.toLocaleString("el-GR")} km · τώρα{" "}
             {reminder.currentOdometer.toLocaleString("el-GR")} km
           </p>
@@ -112,7 +112,7 @@ export default function ServiceReminderBanner({
         </button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className={`${compact ? "mt-2" : "mt-4"} flex flex-wrap gap-2`}>
         <Link
           href="/service"
           className="inline-flex rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold"
