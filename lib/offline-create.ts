@@ -50,23 +50,25 @@ function buildOptimisticEntry<TEntry extends Record<string, unknown>>(
 export async function createWithOfflineQueue<TEntry extends Record<string, unknown>>(
   options: QueueCreateOptions,
 ): Promise<QueueCreateResult<TEntry>> {
+  const createId = uuidv4();
+  const payload = { ...options.payload, id: createId };
+
   const queueOffline = async () => {
-    const localId = uuidv4();
     const receiptDataUrl = options.receiptFile
       ? await fileToDataUrl(options.receiptFile)
       : undefined;
 
     await enqueueOfflineEntry({
-      id: localId,
+      id: createId,
       kind: options.kind,
-      payload: options.payload,
+      payload,
       receiptDataUrl,
       createdAt: new Date().toISOString(),
     });
     await requestBackgroundSync();
 
     return {
-      entry: buildOptimisticEntry<TEntry>(options.payload, localId),
+      entry: buildOptimisticEntry<TEntry>(payload, createId),
       queued: true,
     };
   };
@@ -81,7 +83,7 @@ export async function createWithOfflineQueue<TEntry extends Record<string, unkno
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(options.payload),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {

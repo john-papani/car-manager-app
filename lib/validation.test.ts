@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { validateOdometerMonotonicity } from "@/lib/validation";
+import {
+  createFuelEntrySchema,
+  validateOdometerMonotonicity,
+} from "@/lib/validation";
 
 describe("validateOdometerMonotonicity", () => {
   it("allows higher odometer readings", () => {
@@ -39,5 +42,21 @@ describe("validateOdometerMonotonicity", () => {
         ],
       ),
     ).toBeNull();
+  });
+});
+
+describe("createFuelEntrySchema", () => {
+  it("keeps a client-generated id for idempotent offline retries", () => {
+    const id = "0f927d57-86f8-46fb-9097-48c212fd6458";
+    const result = createFuelEntrySchema.parse({
+      id,
+      date: "2026-11-21",
+      odometer: 1000,
+      liters: 40,
+      total_cost: 70,
+      is_full_tank: true,
+    });
+
+    expect(result.id).toBe(id);
   });
 });

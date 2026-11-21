@@ -9,6 +9,7 @@ const nonNegativeNumber = z.coerce.number().finite().min(0);
 const optionalNonNegativeNumber = z.coerce.number().finite().min(0).optional();
 
 export const createFuelEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   date: isoDateSchema,
   odometer: positiveNumber,
   liters: positiveNumber,
@@ -31,6 +32,7 @@ export const fullUpdateFuelEntrySchema = createFuelEntrySchema.extend({
 });
 
 export const createServiceEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   date: isoDateSchema,
   odometer: positiveNumber,
   total_cost: nonNegativeNumber,
@@ -45,6 +47,7 @@ export const updateServiceEntrySchema = createServiceEntrySchema.extend({
 });
 
 export const createExpenseEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   date: isoDateSchema,
   category: z.string().trim().min(1).max(200),
   total_cost: nonNegativeNumber,

@@ -70,6 +70,13 @@ export async function POST(request: NextRequest) {
     const body = parsed.data;
     const ownerId = getSessionOwnerId(authResult.session);
 
+    if (body.id) {
+      const existing = await getExpenseEntryById(ownerId, body.id);
+      if (existing) {
+        return NextResponse.json({ entry: existing });
+      }
+    }
+
     if (body.odometer !== undefined) {
       const highestOdometer = await getHighestOdometer("expense_entries", ownerId);
       const odometerError = validateOdometerMonotonicity(
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     const entry: ExpenseEntry = {
-      id: uuidv4(),
+      id: body.id ?? uuidv4(),
       date: body.date,
       category: body.category,
       total_cost: body.total_cost,
