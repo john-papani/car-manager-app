@@ -310,9 +310,9 @@ After deployment, check **Vercel → Settings → Cron Jobs** and inspect the fu
 
 ## Roadmap
 
-- Add edit/update flows for all entry types
-- Add filters by date, category, and mileage
-- Expand reporting with monthly and yearly summaries
-- Improve export and backup options
-- Add stronger multi-user support
-- Improve attachment handling across more forms
+- Track vehicle documents and expiry dates for insurance, roadworthiness inspection (KTEO), road tax, and roadside assistance
+- Show upcoming and overdue document reminders on the dashboard
+- Add calendar reminders for service and document expiry dates
+- Extend receipt and document uploads to service, expenses, and vehicle records
+- Add CSV/Excel export and a complete user-data backup flow
+- Support more than one vehicle per account
