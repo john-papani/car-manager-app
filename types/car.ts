@@ -109,3 +109,32 @@ export type UpdateVehicleProfileInput = {
   engine?: string;
   color?: string;
 };
+
+export const vehicleDocumentTypes = [
+  "insurance",
+  "kteo",
+  "road_tax",
+  "roadside_assistance",
+] as const;
+
+export type VehicleDocumentType = (typeof vehicleDocumentTypes)[number];
+
+export type VehicleDocument = {
+  id: string;
+  document_type: VehicleDocumentType;
+  expires_at: string;
+  provider?: string;
+  total_cost?: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateVehicleDocumentInput = Omit<
+  VehicleDocument,
+  "id" | "created_at" | "updated_at"
+>;
+
+export type UpdateVehicleDocumentInput = CreateVehicleDocumentInput & {
+  id: string;
+};

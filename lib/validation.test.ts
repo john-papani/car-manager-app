@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createFuelEntrySchema,
+  createVehicleDocumentSchema,
   validateOdometerMonotonicity,
 } from "@/lib/validation";
 
@@ -42,6 +43,28 @@ describe("validateOdometerMonotonicity", () => {
         ],
       ),
     ).toBeNull();
+  });
+});
+
+describe("createVehicleDocumentSchema", () => {
+  it("accepts supported vehicle documents", () => {
+    const result = createVehicleDocumentSchema.parse({
+      document_type: "insurance",
+      expires_at: "2027-01-31",
+      provider: "Example Insurance",
+      total_cost: 320,
+    });
+
+    expect(result.document_type).toBe("insurance");
+  });
+
+  it("rejects unsupported document types", () => {
+    expect(() =>
+      createVehicleDocumentSchema.parse({
+        document_type: "other",
+        expires_at: "2027-01-31",
+      }),
+    ).toThrow();
   });
 });
 

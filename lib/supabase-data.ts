@@ -3,6 +3,7 @@ import type {
   ExpenseEntry,
   FuelEntry,
   ServiceEntry,
+  VehicleDocument,
   VehicleProfile,
 } from "@/types/car";
 
@@ -19,6 +20,10 @@ type ExpenseEntryRow = ExpenseEntry & {
 };
 
 type VehicleProfileRow = VehicleProfile & {
+  owner_id: string;
+};
+
+type VehicleDocumentRow = VehicleDocument & {
   owner_id: string;
 };
 
@@ -319,4 +324,84 @@ export async function saveVehicleProfile(
   }
 
   return stripOwnerId(data as VehicleProfileRow);
+}
+
+export async function listVehicleDocuments(
+  ownerId: string,
+): Promise<VehicleDocument[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("vehicle_documents")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .order("expires_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => stripOwnerId(row as VehicleDocumentRow));
+}
+
+export async function getVehicleDocumentById(ownerId: string, entryId: string) {
+  const result = await getSupabaseAdminClient()
+    .from("vehicle_documents")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .eq("id", entryId)
+    .maybeSingle();
+
+  const row = unwrapSingleResult(
+    result.data as VehicleDocumentRow | null,
+    result.error,
+  );
+  return row ? stripOwnerId(row) : null;
+}
+
+export async function insertVehicleDocument(
+  ownerId: string,
+  document: VehicleDocument,
+) {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("vehicle_documents")
+    .insert({ ...document, owner_id: ownerId })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return stripOwnerId(data as VehicleDocumentRow);
+}
+
+export async function updateVehicleDocumentRecord(
+  ownerId: string,
+  document: VehicleDocument,
+) {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("vehicle_documents")
+    .update({ ...document, owner_id: ownerId })
+    .eq("owner_id", ownerId)
+    .eq("id", document.id)
+    .select()
+    .maybeSingle();
+
+  const row = unwrapSingleResult(data as VehicleDocumentRow | null, error);
+  return row ? stripOwnerId(row) : null;
+}
+
+export async function deleteVehicleDocumentRecord(
+  ownerId: string,
+  entryId: string,
+) {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("vehicle_documents")
+    .delete()
+    .eq("owner_id", ownerId)
+    .eq("id", entryId)
+    .select()
+    .maybeSingle();
+
+  const row = unwrapSingleResult(data as VehicleDocumentRow | null, error);
+  return row ? stripOwnerId(row) : null;
 }

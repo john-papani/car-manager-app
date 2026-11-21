@@ -9,6 +9,7 @@ import {
   listExpenseEntries,
   listFuelEntries,
   listServiceEntries,
+  listVehicleDocuments,
 } from "@/lib/supabase-data";
 import {
   isVehicleProfileValid,
@@ -18,6 +19,7 @@ import type {
   ExpenseEntry,
   FuelEntry,
   ServiceEntry,
+  VehicleDocument,
   VehicleProfile,
 } from "@/types/car";
 
@@ -138,6 +140,15 @@ export async function getCurrentVehicleProfile(
   const mappedProfile = mapRowToVehicleProfile(toStringRecord(profile));
 
   return isVehicleProfileValid(mappedProfile) ? mappedProfile : null;
+}
+
+export async function getCurrentVehicleDocuments(
+  session?: AppSession | null,
+): Promise<VehicleDocument[]> {
+  const resolvedSession = await resolveSession(session);
+  return listVehicleDocuments(
+    getSessionOwnerId(requireResolvedSession(resolvedSession)),
+  );
 }
 
 export async function getDataHealthSummary(session?: AppSession | null) {

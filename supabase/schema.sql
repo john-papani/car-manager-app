@@ -57,6 +57,23 @@ create index if not exists expense_entries_owner_id_idx
 create index if not exists expense_entries_owner_odometer_idx
   on public.expense_entries (owner_id, odometer desc);
 
+create table if not exists public.vehicle_documents (
+  id text primary key,
+  owner_id text not null,
+  document_type text not null check (
+    document_type in ('insurance', 'kteo', 'road_tax', 'roadside_assistance')
+  ),
+  expires_at date not null,
+  provider text not null default '',
+  total_cost numeric(10, 2) check (total_cost >= 0),
+  notes text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists vehicle_documents_owner_expiry_idx
+  on public.vehicle_documents (owner_id, expires_at asc);
+
 create table if not exists public.vehicle_profiles (
   id text primary key,
   owner_id text not null unique,
@@ -111,6 +128,7 @@ where receipt_file_id <> '';
 alter table public.fuel_entries enable row level security;
 alter table public.service_entries enable row level security;
 alter table public.expense_entries enable row level security;
+alter table public.vehicle_documents enable row level security;
 alter table public.vehicle_profiles enable row level security;
 
 drop policy if exists "Users manage their fuel entries" on public.fuel_entries;
@@ -128,6 +146,12 @@ create policy "Users manage their service entries"
 drop policy if exists "Users manage their expense entries" on public.expense_entries;
 create policy "Users manage their expense entries"
   on public.expense_entries for all
+  using (owner_id = auth.uid()::text)
+  with check (owner_id = auth.uid()::text);
+
+drop policy if exists "Users manage their vehicle documents" on public.vehicle_documents;
+create policy "Users manage their vehicle documents"
+  on public.vehicle_documents for all
   using (owner_id = auth.uid()::text)
   with check (owner_id = auth.uid()::text);
 

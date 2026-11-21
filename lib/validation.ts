@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vehicleDocumentTypes } from "@/types/car";
 
 const isoDateSchema = z
   .string()
@@ -70,6 +71,18 @@ export const updateVehicleProfileSchema = z.object({
   transmission: z.string().max(100).optional(),
   engine: z.string().max(200).optional(),
   color: z.string().max(100).optional(),
+});
+
+export const createVehicleDocumentSchema = z.object({
+  document_type: z.enum(vehicleDocumentTypes),
+  expires_at: isoDateSchema,
+  provider: z.string().max(200).optional(),
+  total_cost: optionalNonNegativeNumber,
+  notes: z.string().max(2000).optional(),
+});
+
+export const updateVehicleDocumentSchema = createVehicleDocumentSchema.extend({
+  id: z.string().min(1),
 });
 
 export function formatZodError(error: z.ZodError) {

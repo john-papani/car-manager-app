@@ -5,6 +5,7 @@ import {
   getCurrentExpenseEntriesWithHealth,
   getCurrentFuelEntriesWithHealth,
   getCurrentServiceEntriesWithHealth,
+  getCurrentVehicleDocuments,
   getCurrentVehicleProfile,
 } from "@/lib/current-user-data";
 import DataHealthBanner from "@/components/DataHealthBanner";
@@ -22,10 +23,16 @@ import {
   buildPeriodReport,
   getRecentMonthOptions,
 } from "@/lib/report-calculations";
+import {
+  documentTypeLabels,
+  getDocumentStatus,
+  sortDocumentsByUrgency,
+} from "@/lib/document-status";
 import type {
   ExpenseEntry,
   FuelEntry,
   ServiceEntry,
+  VehicleDocument,
   VehicleProfile,
 } from "@/types/car";
 
@@ -35,6 +42,8 @@ async function DashboardContent() {
   let expenseEntries: ExpenseEntry[] = [];
   let serviceEntries: ServiceEntry[] = [];
   let vehicleProfile: VehicleProfile | null = null;
+  let vehicleDocuments: VehicleDocument[] = [];
+  let documentsLoadFailed = false;
   let invalidRowCount = 0;
   let loadFailed = false;
 
@@ -59,6 +68,13 @@ async function DashboardContent() {
     loadFailed = true;
   }
 
+  try {
+    vehicleDocuments = await getCurrentVehicleDocuments(session);
+  } catch (error) {
+    console.error("Failed to load vehicle documents", error);
+    documentsLoadFailed = true;
+  }
+
   const vehicleTitle = vehicleProfile
     ? [vehicleProfile.make, vehicleProfile.model, vehicleProfile.trim]
         .filter(Boolean)
@@ -77,6 +93,7 @@ async function DashboardContent() {
   const recentFuelEntries = [...fuelEntries]
     .sort((left, right) => right.date.localeCompare(left.date))
     .slice(0, 3);
+  const sortedDocuments = sortDocumentsByUrgency(vehicleDocuments);
 
   return (
     <PageMain>
@@ -144,6 +161,68 @@ async function DashboardContent() {
       {serviceReminder ? (
         <ServiceReminderBanner reminder={serviceReminder} />
       ) : null}
+
+      <section className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-[var(--card)] p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">
+              Έγγραφα οχήματος
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Ασφάλεια, ΚΤΕΟ και άλλες λήξεις.
+            </p>
+          </div>
+          <Link
+            href="/documents"
+            className="min-h-11 shrink-0 content-center rounded-xl px-3 text-sm font-semibold text-[var(--accent-strong)] hover:bg-[var(--accent-soft)]"
+          >
+            Διαχείριση
+          </Link>
+        </div>
+
+        {documentsLoadFailed ? (
+          <p className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-800">
+            Οι λήξεις δεν φορτώθηκαν. Έλεγξε ότι έχει εφαρμοστεί το νεότερο database schema.
+          </p>
+        ) : sortedDocuments.length > 0 ? (
+          <div className="mt-4 divide-y divide-[var(--line)]">
+            {sortedDocuments.map((entry) => {
+              const result = getDocumentStatus(entry.expires_at);
+              const status =
+                result.status === "expired"
+                  ? { label: "Έληξε", className: "bg-red-100 text-red-900" }
+                  : result.status === "expiring"
+                    ? { label: "Λήγει σύντομα", className: "bg-amber-100 text-amber-900" }
+                    : { label: "Ενεργό", className: "bg-emerald-100 text-emerald-900" };
+
+              return (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                      {documentTypeLabels[entry.document_type]}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Λήξη: {entry.expires_at}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${status.className}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-4 rounded-xl bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)]">
+            Δεν έχεις προσθέσει ακόμη ημερομηνίες λήξης.
+          </p>
+        )}
+      </section>
 
       <section className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-[var(--card)] p-5">
         <div className="flex items-center justify-between gap-3">

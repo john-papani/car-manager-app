@@ -87,7 +87,7 @@ export default function DeleteEntryButton({
         type="button"
         onClick={() => setDialogOpen(true)}
         disabled={disabled}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
         aria-label={disabled ? "Διαγραφή..." : "Διαγραφή"}
       >
         <TrashIcon />
