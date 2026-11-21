@@ -10,6 +10,7 @@ import {
   type EntryFilterState,
 } from "@/lib/entry-filters";
 import { calculateConsumption } from "@/lib/fuel-calculations";
+import { buildFuelCsv } from "@/lib/fuel-csv";
 import {
   buildCalendarDays,
   monthKey,
@@ -95,6 +96,18 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
     timeZone: "UTC",
   }).format(new Date(`${visibleMonth}-01T00:00:00Z`));
 
+  function exportCsv() {
+    const blob = new Blob([buildFuelCsv(filteredEntries)], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `car-manager-fuel-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -114,6 +127,15 @@ export default function FuelEntryList({ entries }: FuelEntryListProps) {
         stations={stations}
         onChange={setFilters}
       />
+
+      <button
+        type="button"
+        onClick={exportCsv}
+        disabled={filteredEntries.length === 0}
+        className="mt-3 w-full rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Εξαγωγή CSV ({filteredEntries.length})
+      </button>
 
       <div
         className="mt-4 grid grid-cols-2 rounded-full bg-[var(--background-strong)] p-1"
